@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Zotero AI Sidebar",
+  "version": "0.8.18",
+  "description": "AI research sidebar for Zotero with API and local browser-backed web chat modes.",
+  "homepage_url": "https://github.com/xuhan-rgb/zotero-ai-sidebar#readme",
+  "author": "qwer",
+  "icons": {
+    "48": "content/icons/favicon@0.5x.png",
+    "96": "content/icons/favicon.png"
+  },
+  "applications": {
+    "zotero": {
+      "id": "zotero-ai-sidebar@local",
+      "strict_min_version": "7.0",
+      "strict_max_version": "10.*",
+      "update_url": "https://github.com/xuhan-rgb/zotero-ai-sidebar/releases/download/release/update.json"
+    }
+  }
+}

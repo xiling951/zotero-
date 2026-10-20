@@ -1,0 +1,65 @@
+{
+  "tag": "v2026.10.20",
+  "artifacts": [
+    {
+      "file": "ai-sidebar-v0.8.18-upstream-source.zip",
+      "bytes": 3684116,
+      "sha256": "1a85698ceebe5f3e1276502bb9b188b249d84d98ff0a81d183c80d2e4d0d0040"
+    },
+    {
+      "file": "pdf-translate-v2.4.8-upstream-source.zip",
+      "bytes": 1770906,
+      "sha256": "b9bc6fe73917afb659d8768abe51092fef0fdea9c872c097a086d774c3f0f18d"
+    },
+    {
+      "file": "pdf2zh-v4.1.7-upstream-source.zip",
+      "bytes": 29596127,
+      "sha256": "50e4bc77a4b232b614ec7ae9069e85deb1a51ec5cd6ba548d8a6415ad9c0c905"
+    },
+    {
+      "file": "pdf2zh@guaguastandup.com.xpi",
+      "bytes": 118457,
+      "sha256": "e793d3ad169d0d5afaecfa6e6c936afd0f479f91fab99a92cafbf9f3bb89afec"
+    },
+    {
+      "file": "privacy-report.json",
+      "bytes": 572,
+      "sha256": "145b71d55216ea72dac0e439d1f427dc0ceb4e1acbc2eff617fc472594780246"
+    },
+    {
+      "file": "release-manifest.json",
+      "bytes": 2819,
+      "sha256": "908270f6cd819e0f5d25188afa4d98ad9713b4f38ceaf8d536f50e498164bb55"
+    },
+    {
+      "file": "zotero-10.0.6-upstream-source.zip",
+      "bytes": 12002024,
+      "sha256": "2184300746cbd31743de6ba9649a5b27118562ecd35d985a4e603997c5ae0549"
+    },
+    {
+      "file": "Zotero-10.0.6-win-x64-clean.zip",
+      "bytes": 137861929,
+      "sha256": "13894fb197aa011556ac3a8a47a2dfec3c83bb00f82779f972b188c10683577e"
+    },
+    {
+      "file": "zotero-ai-sidebar-dark-mode@local.xpi",
+      "bytes": 7359,
+      "sha256": "01919e0576972ff3473e7d4e1862c70d73bcbaa771467718642020da254edf48"
+    },
+    {
+      "file": "zotero-ai-sidebar@local.xpi",
+      "bytes": 1167447,
+      "sha256": "a3b93246dc40730b1cf7a4c6e360e82580a5f49cb82b03c3e57d1c45c1ca8fee"
+    },
+    {
+      "file": "Zotero-Reader-and-Plugins-2026.10.20.zip",
+      "bytes": 142234314,
+      "sha256": "ab52fdbbae4c0bc09eac3f181af2e00f96262738188419bd2a02aa6641af3d0c"
+    },
+    {
+      "file": "zoteropdftranslate@euclpts.com.xpi",
+      "bytes": 775381,
+      "sha256": "8145e9972c507f6baee93b93d2c2e8e7fe24388c58f2cebe0a37e29db5de26e6"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+zoteropdftranslate-itemPaneSection-header =
+    .label = Prevod
+zoteropdftranslate-itemPaneSection-sidenav =
+    .tooltiptext = Prevod
+zoteropdftranslate-itemPaneSection-fullHeight =
+    .tooltiptext = Puna visina
+zoteropdftranslate-itemPaneSection-openStandalone =
+    .tooltiptext = Otvori u zasebnom prozoru
+zoteropdftranslate-field-titleTranslation = Prevod naslova
+zoteropdftranslate-field-abstractTranslation = Prevod sažetka
+zoteropdftranslate-itemmenu-translateTitle =
+    .label = Prevedi naslov
+zoteropdftranslate-itemmenu-translateAbstract =
+    .label = Prevedi sažetak

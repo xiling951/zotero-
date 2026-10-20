@@ -1,0 +1,742 @@
+<linkset>
+    <html:link rel="localization" href="pdf2zh-preferences.ftl" />
+</linkset>
+
+<html:style>
+    .virtualized-table-container { height: 300px; max-height: 300px; }
+    #zotero-prefpane-pdf2zh-llmapi-table-container { height: 100%; width:
+    100%; } .action-button { min-width:auto; height:24px;
+    -moz-context-properties: fill, fill-opacity; fill: currentColor; }
+    .action-button .button-text { display: none; }
+</html:style>
+
+<groupbox
+    onload="Zotero.pdf2zh.hooks.onPrefsEvent('load', { window });"
+>
+    <vbox>
+        <html:h3 data-l10n-id="pdf2zh-pref-config-basic" />
+        <!-- 设置服务器的IP地址 -->
+        <hbox align="center" flex="1">
+            <html:label
+                for="zotero-prefpane-pdf2zh-new_serverip"
+                data-l10n-id="pdf2zh-pref-serverip"
+            />
+            <html:input
+                id="zotero-prefpane-pdf2zh-new_serverip"
+                preference="extensions.zotero.pdf2zh.new_serverip"
+                type="text"
+                style="width: 200px"
+            />
+            <html:button
+                id="zotero-prefpane-pdf2zh-checkConnection"
+                data-l10n-id="pdf2zh-pref-check-connection"
+                style="margin-left: 10px"
+            >
+                检查连接
+            </html:button>
+        </hbox>
+        <!-- 设置翻译的目标语言和源语言 -->
+        <hbox align="center" flex="1">
+            <html:label
+                for="zotero-prefpane-pdf2zh-pref-sourceLang"
+                data-l10n-id="pdf2zh-pref-sourceLang"
+            />
+            <html:input
+                id="zotero-prefpane-pdf2zh-sourceLang"
+                preference="extensions.zotero.pdf2zh.sourceLang"
+                type="text"
+                style="width: 120px; text-align: center"
+            />
+            <html:select
+                id="zotero-prefpane-pdf2zh-sourceLangSelect"
+                preference="extensions.zotero.pdf2zh.sourceLang"
+                style="width: 150px; text-align: center"
+            >
+            </html:select>
+        </hbox>
+        <hbox align="center" flex="1">
+            <html:label
+                for="zotero-prefpane-pdf2zh-targetLang"
+                data-l10n-id="pdf2zh-pref-targetLang"
+            />
+            <html:input
+                id="zotero-prefpane-pdf2zh-targetLang"
+                preference="extensions.zotero.pdf2zh.targetLang"
+                type="text"
+                style="width: 120px; text-align: center"
+            />
+            <html:select
+                id="zotero-prefpane-pdf2zh-targetLangSelect"
+                preference="extensions.zotero.pdf2zh.targetLang"
+                style="width: 150px; text-align: center"
+            >
+            </html:select>
+        </hbox>
+        <!-- 设置翻译引擎 -->
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <html:label
+                    for="zotero-prefpane-pdf2zh-engine"
+                    data-l10n-id="pdf2zh-pref-engine"
+                />
+                <html:input
+                    id="zotero-prefpane-pdf2zh-engine"
+                    preference="extensions.zotero.pdf2zh.engine"
+                    type="text"
+                    flex="1"
+                    style="width: 105px; text-align: center"
+                />
+                <html:select
+                    id="zotero-prefpane-pdf2zh-engineSelect"
+                    preference="extensions.zotero.pdf2zh.engine"
+                    style="width: 130px; text-align: center"
+                >
+                    <html:option value="pdf2zh">pdf2zh</html:option>
+                    <html:option value="pdf2zh_next">pdf2zh_next</html:option>
+                </html:select>
+            </hbox>
+        </hbox>
+        <!-- 设置翻译服务 -->
+        <hbox
+            class="pdf1x-config"
+            style="display: none"
+            align="center"
+            flex="1"
+        >
+            <hbox align="center" flex="1">
+                <html:label
+                    for="zotero-prefpane-pdf2zh-service"
+                    data-l10n-id="pdf2zh-pref-service"
+                />
+                <html:input
+                    id="zotero-prefpane-pdf2zh-service"
+                    preference="extensions.zotero.pdf2zh.service"
+                    type="text"
+                    flex="1"
+                    style="width: 105px; text-align: center"
+                />
+                <html:select
+                    id="zotero-prefpane-pdf2zh-serviceSelect"
+                    preference="extensions.zotero.pdf2zh.service"
+                    style="width: 130px; text-align: center"
+                >
+                    <html:option value="bing">Bing</html:option>
+                    <html:option value="google">Google</html:option>
+
+                    <html:option value="openailiked">OpenAILiked</html:option>
+                    <html:option value="deepseek">DeepSeek</html:option>
+                    <html:option value="openai">OpenAI</html:option>
+                    <html:option value="gemini">Gemini</html:option>
+                    <html:option value="silicon">SiliconFlow</html:option>
+                    <html:option value="zhipu">Zhipu</html:option>
+                    <html:option value="modelscope">ModelScope</html:option>
+                    <html:option value="qwen-mt">Qwen-MT</html:option>
+
+                    <html:option value="deepl">DeepL</html:option>
+                    <html:option value="tencent">Tencent</html:option>
+                    <html:option value="grok">Grok</html:option>
+
+                    <html:option value="dify">Dify</html:option>
+                    <html:option value="argos">Argos</html:option>
+                    <html:option value="ollama">Ollama</html:option>
+                    <html:option value="xinference">XInference</html:option>
+                    <html:option value="anythingllm">AnythingLLM</html:option>
+
+                    <html:option value="azure-openai">Azure OpenAI</html:option>
+                    <html:option value="azure">Azure</html:option>
+
+                    <html:option value="groq">Groq</html:option>
+                </html:select>
+            </hbox>
+        </hbox>
+
+        <hbox
+            class="pdf2x-config"
+            style="display: none"
+            align="center"
+            flex="1"
+        >
+            <hbox align="center" flex="1">
+                <html:label
+                    for="zotero-prefpane-pdf2zh-next_service"
+                    data-l10n-id="pdf2zh-pref-service"
+                />
+                <html:input
+                    id="zotero-prefpane-pdf2zh-next_service"
+                    preference="extensions.zotero.pdf2zh.next_service"
+                    type="text"
+                    flex="1"
+                    style="width: 105px; text-align: center"
+                />
+                <html:select
+                    id="zotero-prefpane-pdf2zh-next_serviceSelect"
+                    preference="extensions.zotero.pdf2zh.next_service"
+                    style="width: 130px; text-align: center"
+                >
+                    <html:option value="siliconflowfree"
+                        >SiliconFlow Free</html:option
+                    >
+                    <html:option value="bing">Bing</html:option>
+                    <html:option value="google">Google</html:option>
+
+                    <html:option value="openailiked">OpenAILiked</html:option>
+                    <html:option value="AliyunDashScope"
+                        >AliyunDashScope</html:option
+                    >
+                    <html:option value="deepseek">DeepSeek</html:option>
+                    <html:option value="openai">OpenAI</html:option>
+                    <html:option value="gemini">Gemini</html:option>
+                    <html:option value="silicon">SiliconFlow</html:option>
+                    <html:option value="zhipu">Zhipu</html:option>
+                    <html:option value="modelscope">ModelScope</html:option>
+                    <html:option value="qwen-mt">Qwen-MT</html:option>
+
+                    <html:option value="deepl">DeepL</html:option>
+                    <html:option value="tencent">Tencent</html:option>
+                    <html:option value="grok">Grok</html:option>
+
+                    <html:option value="dify">Dify</html:option>
+                    <html:option value="argos">Argos</html:option>
+                    <html:option value="ollama">Ollama</html:option>
+                    <html:option value="xinference">XInference</html:option>
+                    <html:option value="anythingllm">AnythingLLM</html:option>
+
+                    <html:option value="azure-openai">Azure OpenAI</html:option>
+                    <html:option value="azure">Azure</html:option>
+
+                    <html:option value="groq">Groq</html:option>
+                    <html:option value="claudecode">claudecode</html:option>
+                </html:select>
+            </hbox>
+        </hbox>
+
+        <!-- 设置翻译线程数、跳过最后几页、重命名 -->
+        <vbox align="left" flex="1">
+            <hbox align="left" flex="1">
+                <hbox align="center" class="pdf1x-config" style="display: none">
+                    <html:label
+                        for="zotero-prefpane-pdf2zh-threadNum"
+                        data-l10n-id="pdf2zh-pref-threadNum"
+                    />
+                    <html:input
+                        id="zotero-prefpane-pdf2zh-threadNum"
+                        preference="extensions.zotero.pdf2zh.threadNum"
+                        type="number"
+                        style="width: 50px; text-align: center"
+                    />
+                </hbox>
+                <hbox class="pdf2x-config" style="display: none">
+                    <hbox align="center">
+                        <html:label
+                            for="zotero-prefpane-pdf2zh-qps"
+                            data-l10n-id="pdf2zh-pref-qps"
+                        />
+                        <html:input
+                            id="zotero-prefpane-pdf2zh-qps"
+                            preference="extensions.zotero.pdf2zh.qps"
+                            type="number"
+                            style="width: 50px; text-align: center"
+                        />
+                    </hbox>
+                    <hbox align="center">
+                        <html:label
+                            for="zotero-prefpane-pdf2zh-poolSize"
+                            data-l10n-id="pdf2zh-pref-poolSize"
+                        />
+                        <html:input
+                            id="zotero-prefpane-pdf2zh-poolSize"
+                            preference="extensions.zotero.pdf2zh.poolSize"
+                            type="number"
+                            style="width: 50px; text-align: center"
+                        />
+                    </hbox>
+                </hbox>
+            </hbox>
+            <hbox align="center" flex="1">
+                <html:label
+                    for="zotero-prefpane-pdf2zh-skipLastPages"
+                    data-l10n-id="pdf2zh-pref-skipLastPages"
+                />
+                <html:input
+                    id="zotero-prefpane-pdf2zh-skipLastPages"
+                    preference="extensions.zotero.pdf2zh.skipLastPages"
+                    type="number"
+                    style="width: 50px; text-align: center"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-rename"
+                    preference="extensions.zotero.pdf2zh.rename"
+                />
+                <html:label
+                    for="zotero-prefpane-pdf2zh-rename"
+                    data-l10n-id="pdf2zh-pref-rename"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-showProgress"
+                    preference="extensions.zotero.pdf2zh.showProgress"
+                />
+                <html:label
+                    for="zotero-prefpane-pdf2zh-showProgress"
+                    data-l10n-id="pdf2zh-pref-showProgress"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-transFirst"
+                    preference="extensions.zotero.pdf2zh.transFirst"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-transFirst"
+                    for="zotero-prefpane-pdf2zh-transFirst"
+                />
+            </hbox>
+        </vbox>
+    </vbox>
+
+    <!-- pdf2zh 1.x专用配置 -->
+    <hbox class="pdf1x-config" style="display: none" align="center" flex="1">
+        <html:h4 data-l10n-id="pdf2zh-pref-pdf1x-config-title"></html:h4>
+        <hbox align="center" flex="1">
+            <checkbox
+                id="zotero-prefpane-pdf2zh-skipSubsetFonts"
+                preference="extensions.zotero.pdf2zh.skipSubsetFonts"
+            />
+            <html:label
+                data-l10n-id="pdf2zh-pref-skipSubsetFonts"
+                for="zotero-prefpane-pdf2zh-skipSubsetFonts"
+            />
+        </hbox>
+        <hbox align="center" flex="1">
+            <checkbox
+                id="zotero-prefpane-pdf2zh-babeldoc"
+                preference="extensions.zotero.pdf2zh.babeldoc"
+            />
+            <html:label
+                data-l10n-id="pdf2zh-pref-babeldoc"
+                for="zotero-prefpane-pdf2zh-babeldoc"
+            />
+        </hbox>
+        <hbox align="center" flex="1">
+            <html:label
+                data-l10n-id="pdf2zh-pref-fontFile"
+                for="zotero-prefpane-pdf2zh-fontFile"
+            />
+            <html:input
+                type="file"
+                id="zotero-prefpane-pdf2zh-fontFile"
+                preference="extensions.zotero.pdf2zh.fontFile"
+                accept=".ttf,.otf,.woff,.woff2"
+            />
+            <button
+                id="zotero-prefpane-pdf2zh-fontFile-clear"
+                label="Clear"
+                data-l10n-id="pdf2zh-pref-clear"
+            />
+        </hbox>
+    </hbox>
+
+    <!-- pdf2zh 2.x专用配置 -->
+    <hbox class="pdf2x-config" style="display: none" align="center" flex="1">
+        <html:h4 data-l10n-id="pdf2zh-pref-pdf2x-config-title"></html:h4>
+        <hbox align="center" flex="1">
+            <html:label
+                data-l10n-id="pdf2zh-pref-fontFamily"
+                for="zotero-prefpane-pdf2zh-fontFamily"
+            />
+            <html:select
+                id="zotero-prefpane-pdf2zh-fontFamily"
+                preference="extensions.zotero.pdf2zh.fontFamily"
+            >
+                <html:option value="auto">auto</html:option>
+                <html:option value="serif">serif</html:option>
+                <html:option value="sans-serif">sans-serif</html:option>
+                <html:option value="script">script</html:option>
+            </html:select>
+        </hbox>
+        <hbox align="center" flex="1">
+            <html:label
+                data-l10n-id="pdf2zh-pref-dualMode"
+                for="zotero-prefpane-pdf2zh-dualMode"
+            />
+            <html:select
+                id="zotero-prefpane-pdf2zh-dualMode"
+                preference="extensions.zotero.pdf2zh.dualMode"
+            >
+                <html:option
+                    value="LR"
+                    data-l10n-id="pdf2zh-pref-dualMode-lr"
+                ></html:option>
+                <html:option
+                    value="TB"
+                    data-l10n-id="pdf2zh-pref-dualMode-tb"
+                ></html:option>
+            </html:select>
+        </hbox>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-ocr"
+                    preference="extensions.zotero.pdf2zh.ocr"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-ocr"
+                    for="zotero-prefpane-pdf2zh-ocr"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-autoOcr"
+                    preference="extensions.zotero.pdf2zh.autoOcr"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-autoOcr"
+                    for="zotero-prefpane-pdf2zh-autoOcr"
+                />
+            </hbox>
+        </hbox>
+
+        <hbox align="center" flex="1">
+            <checkbox
+                id="zotero-prefpane-pdf2zh-noWatermark"
+                preference="extensions.zotero.pdf2zh.noWatermark"
+            />
+            <html:label
+                data-l10n-id="pdf2zh-pref-noWatermark"
+                for="zotero-prefpane-pdf2zh-noWatermark"
+            />
+        </hbox>
+        <hbox align="left" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-saveGlossary"
+                    preference="extensions.zotero.pdf2zh.saveGlossary"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-saveGlossary"
+                    for="zotero-prefpane-pdf2zh-saveGlossary"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-disableGlossary"
+                    preference="extensions.zotero.pdf2zh.disableGlossary"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-disableGlossary"
+                    for="zotero-prefpane-pdf2zh-disableGlossary"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="left" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-noDual"
+                    preference="extensions.zotero.pdf2zh.noDual"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-noDual"
+                    for="zotero-prefpane-pdf2zh-noDual"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-noMono"
+                    preference="extensions.zotero.pdf2zh.noMono"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-noMono"
+                    for="zotero-prefpane-pdf2zh-noMono"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-skipClean"
+                    preference="extensions.zotero.pdf2zh.skipClean"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-skipClean"
+                    for="zotero-prefpane-pdf2zh-skipClean"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-enhanceCompatibility"
+                    preference="extensions.zotero.pdf2zh.enhanceCompatibility"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-enhanceCompatibility"
+                    for="zotero-prefpane-pdf2zh-enhanceCompatibility"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-disableRichTextTranslate"
+                    preference="extensions.zotero.pdf2zh.disableRichTextTranslate"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-disableRichTextTranslate"
+                    for="zotero-prefpane-pdf2zh-disableRichTextTranslate"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-translateTableText"
+                    preference="extensions.zotero.pdf2zh.translateTableText"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-translateTableText"
+                    for="zotero-prefpane-pdf2zh-translateTableText"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="center" flex="1">
+            <checkbox
+                id="zotero-prefpane-pdf2zh-onlyIncludeTranslatedPage"
+                preference="extensions.zotero.pdf2zh.onlyIncludeTranslatedPage"
+            />
+            <html:label
+                data-l10n-id="pdf2zh-pref-onlyIncludeTranslatedPage"
+                for="zotero-prefpane-pdf2zh-onlyIncludeTranslatedPage"
+            />
+        </hbox>
+    </hbox>
+
+    <!--pdf2zh默认生成和打开的文件-->
+    <vbox flex="1">
+        <html:h3 data-l10n-id="pdf2zh-pref-gen"></html:h3>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-mono"
+                    preference="extensions.zotero.pdf2zh.mono"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-mono"
+                    for="zotero-prefpane-pdf2zh-mono"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-mono-open"
+                    preference="extensions.zotero.pdf2zh.mono-open"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-open"
+                    for="zotero-prefpane-pdf2zh-mono-open"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-dual"
+                    preference="extensions.zotero.pdf2zh.dual"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-dual"
+                    for="zotero-prefpane-pdf2zh-dual"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-dual-open"
+                    preference="extensions.zotero.pdf2zh.dual-open"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-open"
+                    for="zotero-prefpane-pdf2zh-dual-open"
+                />
+            </hbox>
+        </hbox>
+        <hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-mono-cut"
+                    preference="extensions.zotero.pdf2zh.mono-cut"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-mono-cut"
+                    for="zotero-prefpane-pdf2zh-mono-cut"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-mono-cut-open"
+                    preference="extensions.zotero.pdf2zh.mono-cut-open"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-open"
+                    for="zotero-prefpane-pdf2zh-mono-cut-open"
+                />
+            </hbox>
+        </hbox>
+        <hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-dual-cut"
+                    preference="extensions.zotero.pdf2zh.dual-cut"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-dual-cut"
+                    for="zotero-prefpane-pdf2zh-dual-cut"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-dual-cut-open"
+                    preference="extensions.zotero.pdf2zh.dual-cut-open"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-open"
+                    for="zotero-prefpane-pdf2zh-dual-cut-open"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-crop-compare"
+                    preference="extensions.zotero.pdf2zh.crop-compare"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-crop-compare"
+                    for="zotero-prefpane-pdf2zh-crop-compare"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-crop-compare-open"
+                    preference="extensions.zotero.pdf2zh.crop-compare-open"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-open"
+                    for="zotero-prefpane-pdf2zh-crop-compare-open"
+                />
+            </hbox>
+        </hbox>
+        <hbox align="center" flex="1">
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-compare"
+                    preference="extensions.zotero.pdf2zh.compare"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-compare"
+                    for="zotero-prefpane-pdf2zh-compare"
+                />
+            </hbox>
+            <hbox align="center" flex="1">
+                <checkbox
+                    id="zotero-prefpane-pdf2zh-compare-open"
+                    preference="extensions.zotero.pdf2zh.compare-open"
+                />
+                <html:label
+                    data-l10n-id="pdf2zh-pref-open"
+                    for="zotero-prefpane-pdf2zh-compare-open"
+                />
+            </hbox>
+        </hbox>
+    </vbox>
+
+    <groupbox>
+        <html:h3>LLM API 配置管理</html:h3>
+        <p>
+            请在此处配置您自行申请的 LLM API 信息,
+            以便插件可以调用相应的翻译服务。
+        </p>
+        <hbox flex="1" align="center" class="virtualized-table-container">
+            <html:div
+                id="zotero-prefpane-pdf2zh-llmapi-table-container"
+            />
+        </hbox>
+        <hbox align="center" flex="1">
+            <button
+                id="zotero-prefpane-pdf2zh-llmapi-add"
+                class="action-button"
+                data-l10n-id="pdf2zh-pref-llmapi-add"
+            />
+            <button
+                id="zotero-prefpane-pdf2zh-llmapi-remove"
+                class="action-button llmapi-selection"
+                data-l10n-id="pdf2zh-pref-llmapi-remove"
+            />
+            <button
+                id="zotero-prefpane-pdf2zh-llmapi-edit"
+                class="action-button llmapi-selection-single"
+                data-l10n-id="pdf2zh-pref-llmapi-edit"
+            />
+            <button
+                id="zotero-prefpane-pdf2zh-llmapi-activate"
+                class="action-button llmapi-selection-single"
+                data-l10n-id="pdf2zh-pref-llmapi-activate"
+            />
+            <button
+                id="zotero-prefpane-pdf2zh-llmapi-totop"
+                class="action-button llmapi-selection-single"
+                data-l10n-id="pdf2zh-pref-llmapi-totop"
+            />
+        </hbox>
+    </groupbox>
+
+    <vbox>
+        <html:h2>注意事项</html:h2>
+        <p align="center">
+            🌷 关于本插件的所有信息, 以本插件的Github项目主页为准:
+            https://github.com/guaguastandup/zotero-pdf2zh
+        </p>
+        <p align="center">
+            🌷 如果您无法访问Github, 请访问本项目Gitee镜像主页:
+            https://gitee.com/guaguastandup/zotero-pdf2zh
+        </p>
+        <p align="center">
+            🌷 本插件需要使用命令行/终端/docker/执行Python脚本,
+            才可以使用翻译功能, 请在翻译过程中保持终端/命令行开启。
+        </p>
+        <p align="center">🌷 项目文档: https://zotero-pdf2zh.github.io/</p>
+        <p align="center">
+            🌷 [2026年8月23日v4.1.7更新日志] 远程/Docker 翻译完成后优先 HTTP
+            挂附件|新旧插件协议兼容|进度条显示翻译百分比|加固附件文件名|补齐额外字段白名单，可从下拉添加
+            `*_enable_json_mode`（默认关闭）|请同时更新插件和 Server
+        </p>
+        <p align="center">
+            🌷 [2026年8月22日v4.1.6更新日志] 翻译改为后台任务，避免 Windows
+            长连接 Network Error|进度查询不再打断终端进度条
+        </p>
+        <p align="center">
+            🌷 [2026年8月21日v4.1.3更新日志] 翻译完成后优先从本机挂附件，减少
+            Network Error 导致条目下没有
+            PDF|终端进度条按真实窗口宽度绘制，避免折行重复打印
+        </p>
+        <p align="center">
+            🌷 [2026年8月20日v4.1.1更新日志] 修复 Windows Conda 将 python.exe
+            找错路径导致环境不可用|staging 更新失败时继续使用健康旧环境|修复
+            Windows 非 UTF-8 控制台因日志 emoji 崩溃
+        </p>
+        <p align="center">
+            🌷 [2026年8月19日v4.1.0更新日志] DeepSeek V4 Thinking 控制|翻译环境
+            staging 安全安装/更新|完善 Dual/Crop 状态处理
+        </p>
+        <p align="center">
+            🌷 本插件为免费开源插件, 请勿在其他渠道购买本插件, 请及时申请退款。
+            QQ交流群请到 GitHub / Gitee
+            仓库主页查看最新群号和入群口令，进群请先查看群公告。
+            请勿使用非官方搬运版中的口令。
+        </p>
+    </vbox>
+</groupbox>
+
+<vbox>
+    <html:h2></html:h2>
+    <html:label
+        data-l10n-id="pdf2zh-pref-help"
+        data-l10n-args='{"time": "2026-08-23 15:15:34","name": "Zotero PDF2zh","version":"4.1.7"}'
+    ></html:label>
+</vbox>

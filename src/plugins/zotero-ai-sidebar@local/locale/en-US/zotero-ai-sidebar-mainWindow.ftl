@@ -1,0 +1,11 @@
+zotero-ai-sidebar-item-section-example1-head-text =
+    .label = Plugin Template: Item Info
+zotero-ai-sidebar-item-section-example1-sidenav-tooltip =
+    .tooltiptext = This is Plugin Template section (item info)
+zotero-ai-sidebar-item-section-example2-head-text =
+    .label = Plugin Template: Reader [{ $status }]
+zotero-ai-sidebar-item-section-example2-sidenav-tooltip =
+    .tooltiptext = This is Plugin Template section (reader)
+zotero-ai-sidebar-item-section-example2-button-tooltip =
+    .tooltiptext = Unregister this section
+zotero-ai-sidebar-item-info-row-example-label = Example Row

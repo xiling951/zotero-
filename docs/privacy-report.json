@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "scope": "allowlisted repository and recursive release/plugin/source archives; no private values in report",
+  "counts": {
+    "files": 182,
+    "archive_entries": 25550,
+    "private_values_compared": 5
+  },
+  "findings": [],
+  "date": "2026-10-20",
+  "reviewed_exemptions": [
+    "Public upstream example paths are not the publishing user home directory.",
+    "CSS word substrings are not credential prefixes.",
+    "The upstream sk-xxxxxxxx placeholder contains no credential."
+  ],
+  "private_values_written_to_report": false
+}

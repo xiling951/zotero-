@@ -1,0 +1,2 @@
+# BabelDOC requires the BitStream API from bitstring 4.x.
+bitstring<5

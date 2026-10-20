@@ -1,0 +1,3 @@
+# Isolated renderer overlay; the original pdf2zh-next environment is unchanged.
+babeldoc==0.6.4
+pymupdf==1.26.7
