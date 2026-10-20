@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "AI 侧栏深色模式",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "为 Zotero AI Sidebar 提供深色、浅色和跟随 Zotero 的主题，保留现有插件功能。",
   "author": "Local Zotero Setup",
   "applications": {
