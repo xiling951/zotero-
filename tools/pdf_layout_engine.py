@@ -37,7 +37,7 @@ def main():
 
     OpenAITranslator.__init__ = initialize_translator
     import pymupdf
-    from pdf_math_bitmap import convert_math_bitmaps
+    from pdf_math_bitmap import candidate_pages, convert_math_bitmaps
     from pdf_layout_quality import small_bitmap_rects, check_layout
     source=Path(parsed.input_file)
     with tempfile.TemporaryDirectory(prefix='zotero-math-layout-',ignore_cleanup_errors=True) as temporary:
@@ -47,7 +47,8 @@ def main():
         prepared=source
         if has_bitmap_math:
             candidate=Path(temporary)/source.name
-            preparation=convert_math_bitmaps(source,candidate)
+            # Only pages PyMuPDF flags are parsed again with pypdf.
+            preparation=convert_math_bitmaps(source,candidate,pages=candidate_pages(source))
             if preparation['convertedGlyphs']:
                 # Verify that moving masks into glyphs did not alter their appearance.
                 import numpy as np
