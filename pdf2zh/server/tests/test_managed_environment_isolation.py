@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import sys
 import tempfile
@@ -37,6 +38,10 @@ class ManagedEnvironmentIsolationTest(unittest.TestCase):
         self.assertEqual(isolated["CUDA_VISIBLE_DEVICES"], "0")
         self.assertIn("PYTHONPATH", source, "the caller's mapping must not be mutated")
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("pydantic_core"),
+        "the probe is run with this interpreter, which needs pydantic installed",
+    )
     def test_health_probe_ignores_ambient_pythonpath(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             fake = Path(temp_dir)
@@ -72,14 +77,15 @@ class ManagedEnvironmentIsolationTest(unittest.TestCase):
         self.assertIs(calls[0][1]["force_reinstall"], True)
 
     def test_reinstall_flags_are_manager_specific(self):
-        uv = _build_install_command(
-            "uv",
-            Path("python"),
-            ["pdf2zh-next"],
-            "https://pypi.org/simple",
-            dry_run=False,
-            reinstall=True,
-        )
+        with patch("utils.environment_lifecycle.shutil.which", return_value="uv"):
+            uv = _build_install_command(
+                "uv",
+                Path("python"),
+                ["pdf2zh-next"],
+                "https://pypi.org/simple",
+                dry_run=False,
+                reinstall=True,
+            )
         with patch("utils.environment_lifecycle._pip_supports_dry_run", return_value=True):
             conda = _build_install_command(
                 "conda",

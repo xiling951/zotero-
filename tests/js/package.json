@@ -1,0 +1,11 @@
+{
+  "name": "zotero-integration-plugin-tests",
+  "private": true,
+  "description": "jsdom checks for the locally maintained Zotero plugins",
+  "scripts": {
+    "test": "node dark-mode.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "24.1.3"
+  }
+}

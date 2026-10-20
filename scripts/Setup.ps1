@@ -1,27 +1,34 @@
 param([string]$AppArchive='', [string]$UvPath='uv', [switch]$SkipPython)
 $ErrorActionPreference='Stop'
+# Windows PowerShell 5.1 extracts archives several times slower while it
+# redraws the progress bar for every file.
+$ProgressPreference='SilentlyContinue'
 $projectRoot=Split-Path $PSScriptRoot -Parent
 $appRoot=Join-Path $projectRoot 'app'
 $exe=Join-Path $appRoot 'Zotero_win-x64\zotero.exe'
 if(-not(Test-Path -LiteralPath $exe)) {
  if(-not $AppArchive){$AppArchive=Join-Path $projectRoot 'Zotero-10.0.6-win-x64-clean.zip'}
  if(-not(Test-Path -LiteralPath $AppArchive)){throw 'Download the clean application archive from this repository Release, or pass -AppArchive.'}
- $manifest=Get-Content -LiteralPath (Join-Path $projectRoot 'manifest.json') -Raw | ConvertFrom-Json
+ $manifest=Get-Content -LiteralPath (Join-Path $projectRoot 'manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
  if((Get-FileHash -LiteralPath $AppArchive -Algorithm SHA256).Hash.ToLower() -ne $manifest.reader_archive.sha256){throw 'Application archive SHA-256 mismatch.'}
- Expand-Archive -LiteralPath $AppArchive -DestinationPath $appRoot
+ Write-Output 'Extracting the Zotero application ...'
+ # -Force replaces files left behind by an interrupted earlier extraction.
+ Expand-Archive -LiteralPath $AppArchive -DestinationPath $appRoot -Force
+ if(-not(Test-Path -LiteralPath $exe)){throw 'zotero.exe not found after extraction; the archive layout is unexpected.'}
 }
 $runtime=Join-Path $projectRoot 'runtime'
-$profile=Join-Path $runtime 'profile'
+$profileDir=Join-Path $runtime 'profile'
 $library=Join-Path $runtime 'library'
-$extensions=Join-Path $profile 'extensions'
+$extensions=Join-Path $profileDir 'extensions'
 New-Item -ItemType Directory -Path $extensions,$library -Force | Out-Null
-$manifest=Get-Content -LiteralPath (Join-Path $projectRoot 'manifest.json') -Raw | ConvertFrom-Json
+$manifest=Get-Content -LiteralPath (Join-Path $projectRoot 'manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 foreach($plugin in $manifest.plugins) {
  $source=Join-Path $projectRoot ('plugins\'+$plugin.file)
  if((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLower() -ne $plugin.sha256){throw ('Plugin SHA-256 mismatch: '+$plugin.file)}
  Copy-Item -LiteralPath $source -Destination (Join-Path $extensions $plugin.file) -Force
+ Write-Output ('Installed '+$plugin.name+' '+$plugin.version)
 }
-$userPrefs=Join-Path $profile 'user.js'
+$userPrefs=Join-Path $profileDir 'user.js'
 if(-not(Test-Path -LiteralPath $userPrefs)){
  $pathJson=ConvertTo-Json $library -Compress
  $lines=@(

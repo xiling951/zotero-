@@ -1,0 +1,18 @@
+# Repository text: LF in the index; PowerShell keeps CRLF in the working tree.
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.ps1 text eol=crlf
+
+*.xpi binary
+*.zip binary
+*.mp3 binary
+*.woff2 binary
+*.png binary
+
+# Unpacked plugin files must stay byte-identical to the XPI entries, so Git
+# must never rewrite their line endings (core.autocrlf on Windows would).
+# Keep this last: later lines override earlier ones.
+src/plugins/** -text

@@ -3,6 +3,8 @@ var preferencesThemeSupport;
 const DARK_MODE_PREF = 'extensions.zotero-ai-sidebar-dark-mode.theme';
 const DARK_SCOPE = ':root[data-zai-sidebar-theme="dark"] :is(#zai-column, #zai-note-column, .zai-app, .zai-quick-ask-layer, .zai-root-independent)';
 const THEME_CHOICES = [['system', '跟随 Zotero'], ['light', '浅色'], ['dark', '深色']];
+// Added nodes that can need theme controls injected into them.
+const RELEVANT_NODES = '.header-layout-menu,.zai-compact-menu-content';
 
 function install() {}
 function uninstall() {}
@@ -127,7 +129,7 @@ const DARK_BASE_CSS = `
 }
 :root[data-zai-sidebar-theme="dark"] :is(#zai-column,#zai-note-column,.zai-app,.zai-root-independent) {
   color-scheme:dark; color:var(--zai-text); background:var(--zai-bg) !important;
-  border-color:var(--zai-border) !important;
+  border-color:var(--zai-border) !important; scrollbar-color:#566173 transparent;
 }
 :root[data-zai-sidebar-theme="light"] :is(#zai-column,#zai-note-column,.zai-app,.zai-root-independent) {color-scheme:light;}
 .zai-sidebar-theme-field select {width:100%; min-width:0; padding:6px 9px; border-radius:7px; font:inherit;}
@@ -166,7 +168,7 @@ function attachDarkMode(win) {
   const apply = () => {
     const choice = getSidebarTheme();
     const resolved = choice === 'system' ? media.matches ? 'dark' : 'light' : choice;
-    doc.documentElement.setAttribute('data-zai-sidebar-theme',resolved);
+    if (doc.documentElement.getAttribute('data-zai-sidebar-theme') !== resolved) doc.documentElement.setAttribute('data-zai-sidebar-theme',resolved);
     for (const select of doc.querySelectorAll('.zai-sidebar-theme-select')) if (select.value !== choice) select.value = choice;
     for (const item of doc.querySelectorAll('[data-zai-sidebar-theme-choice]')) {
       const selected = item.getAttribute('data-zai-sidebar-theme-choice') === choice;
@@ -221,8 +223,30 @@ function attachDarkMode(win) {
     scheduled = true;
     win.requestAnimationFrame(() => {scheduled = false;refresh();});
   };
-  const observer = new win.MutationObserver(schedule);
+  // The main window mutates constantly (item tree, reader tabs, streamed chat
+  // replies). Only a new stylesheet link or a newly rendered layout menu can
+  // change what refresh() produces, so every other mutation is ignored.
+  const watchedLinks = new WeakSet();
+  const watchLink = link => {
+    if (watchedLinks.has(link)) return;
+    watchedLinks.add(link);
+    // cssRules is unavailable until the sheet has loaded.
+    link.addEventListener('load',schedule,{once:true});
+  };
+  const isRelevant = node => {
+    if (node.nodeType !== 1) return false;
+    if (node.localName === 'link') {watchLink(node);return true;}
+    if (node.matches?.(RELEVANT_NODES)) return true;
+    if (!node.firstElementChild) return false;
+    for (const link of node.querySelectorAll('link')) watchLink(link);
+    return !!node.querySelector(RELEVANT_NODES + ',link');
+  };
+  const observer = new win.MutationObserver(records => {
+    if (scheduled || closed) return;
+    for (const record of records) for (const node of record.addedNodes) if (isRelevant(node)) {schedule();return;}
+  });
   observer.observe(doc.documentElement,{childList:true,subtree:true});
+  for (const link of doc.querySelectorAll('link')) watchLink(link);
   media.addEventListener('change',apply);
   darkModeWindows.set(win,{
     refresh,

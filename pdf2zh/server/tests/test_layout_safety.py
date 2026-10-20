@@ -11,7 +11,7 @@ from pypdf.generic import ContentStream,DictionaryObject,NameObject,NumberObject
 
 ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT/'tools'))
-from pdf_math_bitmap import convert_math_bitmaps
+from pdf_math_bitmap import candidate_pages, convert_math_bitmaps
 from pdf_layout_quality import check_layout
 from utils.layout_policy import apply_layout_policy
 
@@ -47,6 +47,21 @@ class LayoutSafetyTests(unittest.TestCase):
         self.assertEqual(report['convertedGlyphs'],12)
         result=check_layout(target,[12])
         self.assertTrue(result['passed'],result)
+
+    def test_page_prefilter_matches_full_scan(self):
+        # Surround the formula page with plain text pages: the PyMuPDF
+        # prefilter must keep exactly the page that the full scan converts.
+        merged=pymupdf.open()
+        for _ in range(2):
+            text=merged.new_page(width=612,height=792)
+            text.insert_text((40,40),'Plain body text without any bitmap formulas. '*4,fontsize=8)
+        with pymupdf.open(self.source) as formula_page:merged.insert_pdf(formula_page)
+        source=Path(self.temp.name)/'mixed.pdf';merged.save(source);merged.close()
+        self.assertEqual(candidate_pages(source),{2})
+        full=convert_math_bitmaps(source,Path(self.temp.name)/'full.pdf')
+        filtered=convert_math_bitmaps(source,Path(self.temp.name)/'filtered.pdf',pages=candidate_pages(source))
+        self.assertEqual(full['pageGlyphs'],[0,0,12])
+        self.assertEqual(filtered,full)
 
     def test_missing_or_duplicated_formula_counts_fail(self):
         target=Path(self.temp.name)/'normalized.pdf'

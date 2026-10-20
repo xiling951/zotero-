@@ -19,10 +19,33 @@ def compose(left, right):
     return (a*g+c*h,b*g+d*h,a*i+c*j,b*i+d*j,a*k+c*l+e,b*k+d*l+f)
 
 
-def convert_math_bitmaps(source, destination):
+def candidate_pages(source, minimum=12):
+    """Indexes of pages that can hold convertible bitmap math, found with PyMuPDF.
+
+    Counts every small 1-bit image (inline or XObject, inside text or not, in
+    either orientation), a superset of the masks convert_math_bitmaps rewrites,
+    so skipping the other pages never changes its result. This avoids parsing
+    every content stream and extracting text with pypdf on long textbooks.
+    """
+    import pymupdf
+    pages=set()
+    with pymupdf.open(source) as document:
+        for index,page in enumerate(document):
+            count=0
+            for image in page.get_image_info():
+                x0,y0,x1,y1=image['bbox']
+                if image.get('bpc',1)==1 and max(x1-x0,y1-y0)<=46:count+=1
+            if count>=minimum:pages.add(index)
+    return pages
+
+
+def convert_math_bitmaps(source, destination, pages=None):
+    """pages: optional set of page indexes to inspect (see candidate_pages)."""
     reader=PdfReader(source); writer=PdfWriter();writer.clone_document_from_reader(reader)
     report={'pages':len(writer.pages),'convertedGlyphs':0,'pageGlyphs':[]}
     for page_index,page in enumerate(writer.pages):
+        if pages is not None and page_index not in pages:
+            report['pageGlyphs'].append(0);continue
         stream=ContentStream(page.get_contents(),writer)
         matrix=(1,0,0,1,0,0);stack=[];inside_text=False;candidates=[]
         # Full scans have no trustworthy native body text to anchor glyphs to.

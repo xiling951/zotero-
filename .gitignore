@@ -42,3 +42,7 @@ cookies.sqlite
 *.7z
 *.dmp
 dist/
+
+node_modules/
+ocr/runtime/
+*.ocr.work/

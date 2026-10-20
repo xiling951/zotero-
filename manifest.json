@@ -15,8 +15,8 @@
       "file": "zotero-ai-sidebar-dark-mode@local.xpi",
       "id": "zotero-ai-sidebar-dark-mode@local",
       "name": "AI 侧栏深色模式",
-      "version": "1.0.2",
-      "sha256": "01919e0576972ff3473e7d4e1862c70d73bcbaa771467718642020da254edf48",
+      "version": "1.0.3",
+      "sha256": "3e1a32f6ab89e8aa2e040b37ba9c6889cbaf1a70970962718d6afae8b234190a",
       "homepage": ""
     },
     {
@@ -37,7 +37,7 @@
     }
   ],
   "pdf2zh_layout_safety": "bitmap-formula-protection-v1",
-  "ocr_status": "planned_not_implemented",
+  "ocr_status": "core_cli_implemented_zotero_integration_planned",
   "upstream_sources": [
     {
       "component": "ai-sidebar",
@@ -72,10 +72,12 @@
     "source": "unmodified installed Zotero application directory; no profile or library"
   },
   "publication_validation": {
-    "portable_synthetic_backend_tests": 19,
+    "portable_synthetic_backend_tests": 23,
     "status": "passed",
     "fresh_machine_install": "not_yet_tested",
     "clean_directory_setup_skip_python": "passed",
-    "powershell_syntax": "passed"
+    "powershell_syntax": "passed",
+    "xpi_source_consistency": "passed",
+    "plugin_dom_tests": "passed"
   }
 }

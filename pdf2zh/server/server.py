@@ -173,14 +173,25 @@ class PDFTranslator:
     ##################################################################
     def events(self):
         def generate():
+            # 每秒检查一次，只在任务变化时推送；空闲时每 15 秒发注释行保活，
+            # 既能及时发现断开的连接，又不会让前端每秒重绘整个列表。
+            last_payload = None
+            idle_seconds = 0
             while True:
                 try:
-                    tasks_data = {
+                    payload = json.dumps({
                         'type': 'tasks',
                         'data': task_manager.get_active_tasks_list()
-                    }
-                    yield f"data: {json.dumps(tasks_data)}\n\n"
-                    time.sleep(1)  # 每秒推送一次
+                    })
+                    if payload != last_payload:
+                        last_payload = payload
+                        idle_seconds = 0
+                        yield f"data: {payload}\n\n"
+                    elif idle_seconds >= 15:
+                        idle_seconds = 0
+                        yield ": keep-alive\n\n"
+                    time.sleep(1)
+                    idle_seconds += 1
                 except GeneratorExit:
                     break
         return Response(
