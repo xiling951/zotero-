@@ -207,7 +207,7 @@
       /* Per-task config toggle */
       .task-config-toggle {
         margin-top: 8px; font-size: 12px; color: #667eea; cursor: pointer;
-        user-select: none; font-weight: 500;
+        user-select: none; font-weight: 500; background: none; border: none; padding: 0; font-family: inherit;
       }
       .task-config-toggle:hover { text-decoration: underline; }
       .task-config-detail {
@@ -271,6 +271,7 @@
       .file-btn svg { width: 14px; height: 14px; }
       .error-message { background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
       .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+      .empty-tasks { text-align: center; padding: 40px; color: #999; }
       .empty-state svg { width: 80px; height: 80px; margin-bottom: 20px; opacity: 0.3; }
 
       /* ========== Modal ========== */
@@ -293,6 +294,54 @@
       }
       .connection-status.connected { background: #e8f5e9; color: #2e7d32; }
       .connection-status.disconnected { background: #ffebee; color: #c62828; }
+
+      button:focus-visible, a:focus-visible { outline: 2px solid #667eea; outline-offset: 2px; }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { transition: none !important; animation: none !important; }
+      }
+
+      /* ========== Dark theme (follows the system / Zotero setting) ========== */
+      @media (prefers-color-scheme: dark) {
+        :root { color-scheme: dark; }
+        body { background: #161a21; color: #d8dee9; }
+        .header, .tab-nav, .help-card, .status-card, .history-card { background: #1f242d; box-shadow: 0 2px 14px rgba(0,0,0,0.35); }
+        .header-text h1, .tab-btn:hover, .tab-btn.active { color: #9aa9ff; }
+        .tab-btn.active { border-bottom-color: #9aa9ff; }
+        .header-text p, .tab-btn, .status-subtitle, .history-time, .help-link-list .link-desc { color: #9aa5b5; }
+        .help-card h3, .status-title, .history-title, .task-filename, .history-filename, .config-key, .task-info-value { color: #e5e9f0; }
+        .task-info-label, .status-text, .config-display, .meta-grid { color: #aeb8c6; }
+        .notice-banner { background: #2c2618; border-color: #6b5520; color: #e8d3a2; }
+        .notice-banner strong { color: #ffc35c; }
+        .glossary-table td, .help-link-list li, .config-row { border-bottom-color: #2f3642; }
+        .glossary-table td:first-child, .config-val, .help-link-list a, .header-text p a, .notice-banner a, .task-config-toggle { color: #9aa9ff; }
+        .segmented, .sound-toggle, .action-btn, .task-config-detail, .file-type-tag { background: #262d3a; border-color: #3a4354; color: #b4c0ff; }
+        .seg-btn { color: #b4c0ff; }
+        .seg-btn.active { background: #5f6fd8; color: #fff; }
+        .sound-toggle:hover, .action-btn:hover { background: #2f3850; }
+        .sound-toggle.muted { background: #232831; color: #7d8794; }
+        .status-badge.idle { background: #2a303b; color: #aeb8c6; }
+        .status-badge.active, .task-badge.active { background: #173528; color: #6fdca8; }
+        .task-card, .history-item { background: #232933; }
+        .history-item:hover { background: #29303c; }
+        .history-item.expanded { background: #262d38; }
+        .history-details { border-top-color: #364050; }
+        .history-details strong { color: #d8dee9 !important; }
+        .task-progress-bar { background: #343c4a; }
+        .task-message { background: #3a3220; color: #f3dca6; }
+        .task-message.error, .error-message, .task-badge.failed, .connection-status.disconnected { background: #3d2224; color: #ffaaa5; }
+        .task-message.success, .task-badge.completed, .connection-status.connected { background: #1b3424; color: #9fdcb0; }
+        .file-action-group { border-color: #3a4354; }
+        .file-type-tag { border-right-color: #3a4354; }
+        .file-type-tag .ft-desc { color: #9aa5b5; }
+        .file-btn { background: #1f242d; color: #9aa9ff; }
+        .file-btn:hover { background: #2a3142; }
+        .file-btn.download { border-right-color: #3a4354; }
+        .empty-state, .empty-tasks { color: #8b95a3; }
+        .modal-container { background: #1f242d; }
+        .modal-header { background: #262c36; border-bottom-color: #364050; }
+        .close-modal { color: #c3cbd6; }
+        .modal-body { background: #10131a; }
+      }
 
       @media (max-width: 640px) {
         body { padding: 14px; }
@@ -442,7 +491,7 @@
             </div>
           </div>
           <div class="tasks-container" id="tasksContainer">
-            <div style="text-align:center;padding:40px;color:#999"><p>暂无活动任务</p></div>
+            <div class="empty-tasks"><p>暂无活动任务</p></div>
           </div>
         </div>
       </div>
@@ -466,9 +515,10 @@
       // ================= 全局变量 =================
       let eventSource = null;
       let reconnectAttempts = 0;
-      const maxReconnectAttempts = 5;
+      let reconnectTimer = null;
+      let lastTasksSignature = "";
+      let firstTasksMessage = true;
       let activeTasks = {};
-      let taskTimers = {};
       let currentTaskFilter = "active";
       let lastTasksList = [];
       const notifiedTaskIds = new Set();
@@ -485,6 +535,7 @@
       let currentSoundSrc = storedSound || DEFAULT_DING_SOUND;
       let audioObj = new Audio(currentSoundSrc);
       let isSoundMuted = localStorage.getItem("pdf2zh_sound_muted") === "true";
+      const baseTitle = document.title;
 
       // ================= Tab 切换 =================
       function switchTab(tabId) {
@@ -546,6 +597,11 @@
       }
 
       // ================= 工具函数 =================
+      // Task and history fields (file names, error text) come from PDFs and
+      // translation backends; never interpolate them into HTML unescaped.
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+      }
       function getFileTypeLabel(filename) {
         const lower = filename.toLowerCase();
         if (lower.includes('crop-compare') || lower.includes('crop.compare')) return { code: 'crop-compare', desc: '裁剪对照(双栏专用)' };
@@ -584,29 +640,33 @@
           let val = v;
           if (Array.isArray(v)) val = v.join(', ') || '-';
           if (typeof v === 'boolean') val = v ? '是' : '否';
-          return `<div class="config-row"><span class="config-key">${label}</span><span class="config-val">${val}</span></div>`;
+          return `<div class="config-row"><span class="config-key">${escapeHtml(label)}</span><span class="config-val">${escapeHtml(val)}</span></div>`;
         }).join('');
       }
 
       // ================= 任务计时器 =================
-      function updateTaskTimer(taskId, startTimeStr) {
-        if (taskTimers[taskId]) clearInterval(taskTimers[taskId]);
-        if (!startTimeStr) return;
-        const startTime = new Date(startTimeStr).getTime();
-        const el = document.getElementById(`elapsedTime-${taskId}`);
-        if (!el) return;
-        el.textContent = formatDuration(Math.floor((Date.now() - startTime) / 1000));
-        taskTimers[taskId] = setInterval(() => {
-          el.textContent = formatDuration(Math.floor((Date.now() - startTime) / 1000));
-        }, 1000);
+      // One shared ticker updates every running task's elapsed time in place.
+      // Per-task intervals used to bind to nodes that the next render replaced,
+      // so running tasks stayed on "计算中..." forever.
+      let elapsedTicker = null;
+      function tickElapsed() {
+        const nodes = document.querySelectorAll("[data-elapsed-since]");
+        nodes.forEach(el => {
+          const start = Number(el.dataset.elapsedSince);
+          if (Number.isFinite(start)) el.textContent = formatDuration(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+        });
+        if (!nodes.length) stopElapsedTicker();
       }
-      function stopTaskTimer(taskId) {
-        if (taskTimers[taskId]) { clearInterval(taskTimers[taskId]); delete taskTimers[taskId]; }
+      function startElapsedTicker() {
+        tickElapsed();
+        if (!elapsedTicker && document.querySelector("[data-elapsed-since]")) elapsedTicker = setInterval(tickElapsed, 1000);
+      }
+      function stopElapsedTicker() {
+        if (elapsedTicker) { clearInterval(elapsedTicker); elapsedTicker = null; }
       }
 
       // ================= PDF 预览 =================
       function openPdfPreview(url, filename) {
-        if (window.event) window.event.stopPropagation();
         document.getElementById("pdfModalTitle").textContent = "预览: " + filename;
         document.getElementById("pdfFrame").src = url;
         document.getElementById("pdfModal").style.display = "flex";
@@ -616,29 +676,37 @@
         document.getElementById("pdfFrame").src = "";
       }
       document.getElementById("pdfModal").addEventListener("click", function(e) { if (e.target === this) closePdfPreview(); });
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape" && document.getElementById("pdfModal").style.display === "flex") closePdfPreview();
+      });
 
       // ================= 历史记录管理 =================
       const STORAGE_KEY = "pdf2zh_history_v2";
-      function getLocalHistory() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch(e) { return []; } }
-      function saveLocalHistory(h) { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+      const MAX_LOCAL_HISTORY = 300;
+      function getLocalHistory() { try { const h = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); return Array.isArray(h) ? h : []; } catch(e) { return []; } }
+      function saveLocalHistory(h) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h.slice(0, MAX_LOCAL_HISTORY))); } catch(e) {} }
       function clearLocalHistory() { if (confirm("确定要清空所有本地历史记录吗？")) { localStorage.removeItem(STORAGE_KEY); displayHistory([]); } }
       function mergeHistory(serverHistory) {
         let local = getLocalHistory();
         const map = new Map();
         local.forEach(i => map.set(i.fileName + i.startTime, i));
         serverHistory.forEach(i => map.set(i.fileName + i.startTime, i));
-        const merged = Array.from(map.values()).sort((a,b) => new Date(b.startTime) - new Date(a.startTime));
+        const merged = Array.from(map.values()).sort((a,b) => new Date(b.startTime) - new Date(a.startTime)).slice(0, MAX_LOCAL_HISTORY);
         saveLocalHistory(merged);
         return merged;
       }
-      function toggleHistoryItem(el) { el.classList.toggle("expanded"); }
+      function toggleHistoryItem(item) {
+        const expanded = item.classList.toggle("expanded");
+        item.querySelector(".history-summary")?.setAttribute("aria-expanded", String(expanded));
+      }
       function toggleTaskConfig(btn) {
         const detail = btn.nextElementSibling;
         if (detail) {
           detail.classList.toggle('show');
           btn.textContent = detail.classList.contains('show') ? '收起配置 ▲' : '查看翻译配置 ▼';
+          btn.setAttribute('aria-expanded', String(detail.classList.contains('show')));
           // 记录展开状态
-          const taskId = btn.closest('.task-card')?.id?.replace('task-', '');
+          const taskId = btn.closest('.task-card')?.dataset.taskId;
           if (taskId) {
             if (detail.classList.contains('show')) expandedConfigTasks.add(taskId);
             else expandedConfigTasks.delete(taskId);
@@ -671,73 +739,86 @@
       }
 
       // ================= 更新任务列表 =================
-      function updateTasks(tasksList) {
-        lastTasksList = Array.isArray(tasksList) ? tasksList : [];
+      function renderTaskCard(task) {
+        const taskId = String(task.taskId || "unknown"), isActive = !!task.active;
+        const n = normalizeTaskState(task);
+        let progress = Number.isFinite(task.progress) ? task.progress : parseInt(task.progress||"0",10);
+        if (!Number.isFinite(progress)) progress = 0;
+        progress = Math.max(0, Math.min(100, n.state==="success" ? 100 : progress));
+        let cardClass = "task-card", badgeClass = "task-badge";
+        if (n.state==="active") badgeClass+=" active";
+        else if (n.state==="success") { cardClass+=" completed"; badgeClass+=" completed"; }
+        else if (n.state==="failed") { cardClass+=" failed"; badgeClass+=" failed"; }
+        let elapsed = "-";
+        if (task.startTime) {
+          const start = new Date(task.startTime).getTime();
+          if (isActive) elapsed = `<span data-elapsed-since="${start}">${formatDuration(Math.max(0, Math.floor((Date.now() - start) / 1000)))}</span>`;
+          else elapsed = formatDuration(Math.max(0, Math.floor(((task.endTime?new Date(task.endTime).getTime():Date.now()) - start) / 1000)));
+        }
+        let msgHtml = "";
+        if (task.message) { let mc = "task-message"; if(n.state==="failed") mc+=" error"; else if(n.state==="success") mc+=" success"; msgHtml = `<div class="${mc}" style="display:block">${escapeHtml(task.message)}</div>`; }
+        let cfgHtml = "";
+        if (task.config) {
+          const isExpanded = expandedConfigTasks.has(taskId);
+          cfgHtml = `<button type="button" class="task-config-toggle" aria-expanded="${isExpanded}" onclick="toggleTaskConfig(this)">${isExpanded ? "收起配置 ▲" : "查看翻译配置 ▼"}</button><div class="task-config-detail ${isExpanded?"show":""} config-display">${renderConfigHtml(task.config)}</div>`;
+        }
+        return `<div class="${cardClass}" id="task-${escapeHtml(taskId)}" data-task-id="${escapeHtml(taskId)}">
+          <div class="task-header"><div class="task-filename">${escapeHtml(task.fileName||"未知文件")}</div><div class="${badgeClass}">${escapeHtml(n.badgeText)}</div></div>
+          <div class="task-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><div class="task-progress-fill" style="width:${progress}%"></div></div>
+          <div class="task-info">
+            <div class="task-info-item"><div class="task-info-label">进度</div><div class="task-info-value">${progress}%</div></div>
+            <div class="task-info-item"><div class="task-info-label">开始</div><div class="task-info-value">${formatTime(task.startTime)}</div></div>
+            <div class="task-info-item"><div class="task-info-label">引擎</div><div class="task-info-value">${escapeHtml(task.engine||"-")}</div></div>
+            <div class="task-info-item"><div class="task-info-label">服务</div><div class="task-info-value">${escapeHtml(task.service||"-")}</div></div>
+            <div class="task-info-item"><div class="task-info-label">模型</div><div class="task-info-value" title="${escapeHtml(task.modelName||"-")}">${escapeHtml(task.modelName||"默认模型")}</div></div>
+            <div class="task-info-item"><div class="task-info-label">耗时</div><div class="task-info-value">${elapsed}</div></div>
+          </div>
+          ${msgHtml}${cfgHtml}
+        </div>`;
+      }
+
+      function updateTasks(tasksList, force = false) {
+        tasksList = Array.isArray(tasksList) ? tasksList : [];
+        // The server pushes a snapshot every second; skip identical snapshots so
+        // the list is not torn down (losing hover/selection) while nothing changed.
+        const signature = JSON.stringify(tasksList);
+        if (!force && signature === lastTasksSignature) return;
+        lastTasksSignature = signature;
+        lastTasksList = tasksList;
         const tasksContainer = document.getElementById("tasksContainer");
         const taskCount = document.getElementById("taskCount");
         const taskStats = document.getElementById("taskStats");
         const badge = document.getElementById("tabTaskBadge");
 
-        const activeCount = tasksList.filter(t => !!t.active).length;
-        const successCount = tasksList.filter(t => normalizeTaskState(t).state==="success").length;
-        const failedCount = tasksList.filter(t => normalizeTaskState(t).state==="failed").length;
+        const states = tasksList.map(t => normalizeTaskState(t).state);
+        const activeCount = states.filter(st => st==="active").length;
+        const successCount = states.filter(st => st==="success").length;
+        const failedCount = states.filter(st => st==="failed").length;
         taskCount.textContent = `${activeCount} 个活动任务`;
         taskCount.className = `status-badge ${activeCount > 0 ? "active" : "idle"}`;
         taskStats.textContent = `进行中 ${activeCount} \u00b7 成功 ${successCount} \u00b7 失败 ${failedCount}`;
-        // 更新 tab badge
-        if (activeCount > 0) { badge.textContent = activeCount; badge.style.display = 'inline'; }
-        else { badge.style.display = 'none'; }
+        if (activeCount > 0) { badge.textContent = activeCount; badge.style.display = "inline"; }
+        else { badge.style.display = "none"; }
+        document.title = activeCount > 0 ? `(${activeCount}) ${baseTitle}` : baseTitle;
 
-        const sorted = sortTasks(tasksList), shown = filterTasks(sorted);
-        if (shown.length === 0) {
-          tasksContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#999"><p>暂无符合筛选条件的任务</p></div>';
-        } else {
-          tasksContainer.innerHTML = shown.map(task => {
-            const taskId = task.taskId || "unknown", isActive = !!task.active;
-            const n = normalizeTaskState(task);
-            let progress = Number.isFinite(task.progress) ? task.progress : parseInt(task.progress||"0",10);
-            if (!Number.isFinite(progress)) progress = 0;
-            if (n.state==="success") progress = 100;
-            let cardClass = "task-card", badgeClass = "task-badge", badgeText = n.badgeText;
-            if (n.state==="active") { badgeClass+=" active"; updateTaskTimer(taskId, task.startTime); }
-            else if (n.state==="success") { cardClass+=" completed"; badgeClass+=" completed"; stopTaskTimer(taskId); }
-            else if (n.state==="failed") { cardClass+=" failed"; badgeClass+=" failed"; stopTaskTimer(taskId); }
-            else { stopTaskTimer(taskId); }
-            let elapsed = "-";
-            if (task.startTime) {
-              if (isActive) elapsed = `<span id="elapsedTime-${taskId}">计算中...</span>`;
-              else { elapsed = formatDuration(Math.floor(((task.endTime?new Date(task.endTime):new Date()) - new Date(task.startTime)) / 1000)); }
-            }
-            let msgHtml = "";
-            if (task.message) { let mc = "task-message"; if(n.state==="failed") mc+=" error"; else if(n.state==="success") mc+=" success"; msgHtml = `<div class="${mc}" style="display:block">${task.message}</div>`; }
-            // 配置摘要
-            let cfgHtml = '';
-            if (task.config) {
-              const isExpanded = expandedConfigTasks.has(taskId);
-              cfgHtml = `<div class="task-config-toggle ${isExpanded?'expanded':''}" onclick="toggleTaskConfig(this)">${isExpanded ? '收起配置 ▲' : '查看翻译配置 ▼'}</div><div class="task-config-detail ${isExpanded?'show':''} config-display">${renderConfigHtml(task.config)}</div>`;
-            }
-            return `<div class="${cardClass}" id="task-${taskId}">
-              <div class="task-header"><div class="task-filename">${task.fileName||"未知文件"}</div><div class="${badgeClass}">${badgeText}</div></div>
-              <div class="task-progress-bar"><div class="task-progress-fill" style="width:${progress}%"></div></div>
-              <div class="task-info">
-                <div class="task-info-item"><div class="task-info-label">进度</div><div class="task-info-value">${progress}%</div></div>
-                <div class="task-info-item"><div class="task-info-label">开始</div><div class="task-info-value">${formatTime(task.startTime)}</div></div>
-                <div class="task-info-item"><div class="task-info-label">引擎</div><div class="task-info-value">${task.engine||"-"}</div></div>
-                <div class="task-info-item"><div class="task-info-label">服务</div><div class="task-info-value">${task.service||"-"}</div></div>
-                <div class="task-info-item"><div class="task-info-label">模型</div><div class="task-info-value" title="${task.modelName||'-'}">${task.modelName||'默认模型'}</div></div>
-                <div class="task-info-item"><div class="task-info-label">耗时</div><div class="task-info-value">${elapsed}</div></div>
-              </div>
-              ${msgHtml}${cfgHtml}
-            </div>`;
-          }).join("");
-        }
-        // 提示音 & 历史刷新
-        tasksList.forEach(task => {
-          const st = normalizeTaskState(task).state;
+        const shown = filterTasks(sortTasks(tasksList));
+        tasksContainer.innerHTML = shown.length
+          ? shown.map(renderTaskCard).join("")
+          : '<div class="empty-tasks"><p>暂无符合筛选条件的任务</p></div>';
+        startElapsedTicker();
+
+        // 提示音 & 历史刷新. Tasks that had already finished before this page
+        // connected are recorded silently instead of all chiming at once.
+        let finishedNow = false;
+        tasksList.forEach((task, index) => {
+          const st = states[index];
           if (!task.active && (st==="success"||st==="failed") && !notifiedTaskIds.has(task.taskId)) {
-            playDing(); notifiedTaskIds.add(task.taskId); setTimeout(syncHistory, 1500);
+            notifiedTaskIds.add(task.taskId);
+            if (!firstTasksMessage) finishedNow = true;
           }
         });
+        firstTasksMessage = false;
+        if (finishedNow) { playDing(); setTimeout(syncHistory, 1500); }
         activeTasks = {};
         tasksList.forEach(task => { activeTasks[task.taskId] = task; });
       }
@@ -749,6 +830,8 @@
         eventSource.onopen = function () {
           document.getElementById("connectionStatus").className = "connection-status connected";
           document.getElementById("connectionStatus").textContent = "\u25cf 已连接";
+          // A restarted server may have finished tasks meanwhile; refresh history once.
+          if (reconnectAttempts > 0) syncHistory();
           reconnectAttempts = 0;
         };
         eventSource.onmessage = function (event) {
@@ -758,9 +841,14 @@
           document.getElementById("connectionStatus").className = "connection-status disconnected";
           document.getElementById("connectionStatus").textContent = "\u25cf 未连接";
           eventSource.close();
-          Object.keys(taskTimers).forEach(id => stopTaskTimer(id));
+          stopElapsedTicker();
+          // Keep retrying (the server may be restarted from Zotero) with a
+          // capped backoff instead of giving up after 15 seconds.
           reconnectAttempts++;
-          if (reconnectAttempts < maxReconnectAttempts) setTimeout(connectSSE, 3000);
+          const delay = Math.min(30000, 2000 * Math.pow(1.6, reconnectAttempts - 1));
+          document.getElementById("connectionStatus").textContent = `\u25cf 未连接，${Math.round(delay / 1000)} 秒后重试`;
+          clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(connectSSE, delay);
         };
       }
 
@@ -783,22 +871,22 @@
           // 文件按钮
           let filesHtml = "";
           if (isSuccess && item.fileList && item.fileList.length > 0) {
-            filesHtml = `<div class="history-files" onclick="event.stopPropagation()">${item.fileList.map(file => {
-              const url = `/translatedFile/${encodeURIComponent(file)}`, ft = getFileTypeLabel(file);
+            filesHtml = `<div class="history-files">${item.fileList.map(file => {
+              const url = `/translatedFile/${encodeURIComponent(file)}`, ft = getFileTypeLabel(String(file));
               const tag = ft.code ? `<span class="file-type-tag"><span class="ft-code">${ft.code}</span><span class="ft-desc">${ft.desc}</span></span>` : `<span class="file-type-tag"><span class="ft-desc">${ft.desc}</span></span>`;
-              return `<div class="file-action-group">${tag}<a href="${url}" class="file-btn download" download title="下载 ${ft.code||file}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>下载</a><button onclick="openPdfPreview('${url}?preview=true','${file}')" class="file-btn preview" title="预览 ${ft.code||file}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>预览</button></div>`;
+              return `<div class="file-action-group">${tag}<a href="${escapeHtml(url)}" class="file-btn download" download title="下载 ${escapeHtml(ft.code||file)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>下载</a><button type="button" data-preview-url="${escapeHtml(url)}?preview=true" data-preview-name="${escapeHtml(file)}" class="file-btn preview" title="预览 ${escapeHtml(ft.code||file)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>预览</button></div>`;
             }).join("")}</div>`;
           }
-          let errorHtml = !isSuccess && item.error ? `<div class="error-message"><strong>错误信息:</strong> ${item.error}</div>` : "";
+          let errorHtml = !isSuccess && item.error ? `<div class="error-message"><strong>错误信息:</strong> ${escapeHtml(item.error)}</div>` : "";
           // 配置摘要
           let cfgSection = "";
           if (item.config) {
             cfgSection = `<div style="margin-top:10px"><strong style="font-size:13px;color:#333">翻译配置:</strong><div class="config-display" style="margin-top:6px">${renderConfigHtml(item.config)}</div></div>`;
           }
-          return `<div class="history-item ${sc}" onclick="toggleHistoryItem(this)">
-            <div class="history-summary"><div><div class="history-filename">${item.fileName||"未知文件"}</div><div class="history-time">${timeStr}</div></div><div style="display:flex;align-items:center"><span class="status-dot ${sc}"></span><span class="status-text">${st}</span></div></div>
+          return `<div class="history-item ${sc}">
+            <div class="history-summary" role="button" tabindex="0" aria-expanded="false"><div><div class="history-filename">${escapeHtml(item.fileName||"未知文件")}</div><div class="history-time">${timeStr}</div></div><div style="display:flex;align-items:center"><span class="status-dot ${sc}"></span><span class="status-text">${st}</span></div></div>
             <div class="history-details">
-              <div class="meta-grid"><div><strong>引擎:</strong> ${item.engine||"-"}</div><div><strong>服务:</strong> ${item.service||"-"}</div><div><strong>模型:</strong> ${item.modelName||'默认模型'}</div><div><strong>耗时:</strong> ${duration}</div><div><strong>结束:</strong> ${formatTime(item.endTime)}</div></div>
+              <div class="meta-grid"><div><strong>引擎:</strong> ${escapeHtml(item.engine||"-")}</div><div><strong>服务:</strong> ${escapeHtml(item.service||"-")}</div><div><strong>模型:</strong> ${escapeHtml(item.modelName||"默认模型")}</div><div><strong>耗时:</strong> ${duration}</div><div><strong>结束:</strong> ${formatTime(item.endTime)}</div></div>
               ${cfgSection}${filesHtml}${errorHtml}
             </div>
           </div>`;
@@ -813,7 +901,7 @@
           if (result.status === "success") {
             const c = result.config;
             const labels = { version:"服务器版本", port:"端口号", enable_venv:"虚拟环境", env_tool:"环境工具", enable_mirror:"镜像加速", mirror_source:"镜像源", skip_install:"跳过安装", enable_winexe:"Win EXE 模式" };
-            el.innerHTML = Object.entries(c).map(([k,v]) => `<div class="config-row"><span class="config-key">${labels[k]||k}</span><span class="config-val">${v}</span></div>`).join("");
+            el.innerHTML = Object.entries(c).map(([k,v]) => `<div class="config-row"><span class="config-key">${escapeHtml(labels[k]||k)}</span><span class="config-val">${escapeHtml(v)}</span></div>`).join("");
           } else { el.innerHTML = '<div style="color:#999;padding:10px 0">无法获取配置</div>'; }
         } catch(e) { el.innerHTML = '<div style="color:#ddd;padding:10px 0">暂不可用</div>'; }
       }
@@ -837,9 +925,23 @@
             currentTaskFilter = btn.dataset.filter;
             Array.from(filterEl.querySelectorAll(".seg-btn")).forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
-            updateTasks(lastTasksList);
+            updateTasks(lastTasksList, true);
           });
         }
+        const historyList = document.getElementById("historyList");
+        historyList.addEventListener("click", e => {
+          const preview = e.target.closest("[data-preview-url]");
+          if (preview) { openPdfPreview(preview.dataset.previewUrl, preview.dataset.previewName); return; }
+          if (e.target.closest(".history-files, .history-details")) return;
+          const item = e.target.closest(".history-item");
+          if (item) toggleHistoryItem(item);
+        });
+        historyList.addEventListener("keydown", e => {
+          if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("history-summary")) {
+            e.preventDefault();
+            toggleHistoryItem(e.target.closest(".history-item"));
+          }
+        });
         displayHistory(getLocalHistory());
         connectSSE();
         syncHistory();
@@ -848,7 +950,8 @@
       });
       window.addEventListener("beforeunload", function () {
         if (eventSource) eventSource.close();
-        Object.keys(taskTimers).forEach(id => stopTaskTimer(id));
+        clearTimeout(reconnectTimer);
+        stopElapsedTicker();
       });
     </script>
   </body>

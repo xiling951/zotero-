@@ -121,9 +121,10 @@ class TaskManager:
             threading.Thread(target=self._delayed_remove, args=(task_id,), daemon=True).start()
 
     def get_active_tasks_list(self):
+        # Copy each task under the lock: callers serialize the result while
+        # worker threads keep updating the live dicts.
         with self.lock:
-            tasks = list(self.active_tasks.values())
-            return tasks
+            return [dict(task) for task in self.active_tasks.values()]
 
     def get_history(self):
         with self.lock:
