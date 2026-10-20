@@ -12,7 +12,7 @@
 - **Zotero AI Sidebar 0.8.18**：PDF 伴读、选段提问、模型配置和笔记入口。
 - **Translate for Zotero 2.4.8**：阅读中的文字翻译。
 - **Zotero PDF2zh 4.1.7**：连接本地全文翻译服务。
-- **AI 侧栏深色模式 1.0.2**：侧栏与模型设置页的主题及布局修复。
+- **AI 侧栏深色模式 1.0.3**：侧栏与模型设置页的主题及布局修复；1.0.3 只在侧栏样式表或排版菜单出现时刷新，不再随主窗口每次 DOM 变化重算（流式回答时尤为明显）。
 - **本地 PDF2zh 服务与公式保护**：位图数学符号预处理、整页对照、公式数量和可检测重叠/越界检查。
 
 完整版本、插件 ID、来源和 SHA-256 见 [manifest.json](manifest.json)。原发布中的插件字节保持不变；解包源码在 [src/plugins](src/plugins)。本地 Python 修复在 [tools](tools) 和 [pdf2zh/server](pdf2zh/server)。
@@ -40,7 +40,19 @@
 
 运行数据放在本项目的 `runtime/`，不会读取旧电脑配置目录或自动导入私人文献。不要把新产生的运行目录提交回 Git。若 8890 已被另一套翻译服务占用，启动脚本会停止并提示；可指定 `-ServerPort`，并在 PDF2zh 设置中同步修改服务地址。
 
-完整包已带阅读器程序。只克隆源码的用户，可将 Release 的 `Zotero-10.0.6-win-x64-clean.zip` 放在项目根目录，再执行 Setup；或通过 `-AppArchive` 指定文件。`-SkipPython` 仅准备独立阅读器与插件，全文翻译服务仍需后续安装依赖。
+启动脚本的其他选项：
+
+| 选项 | 作用 |
+| --- | --- |
+| `-ReaderOnly` | 只启动阅读器，不启动翻译服务 |
+| `-ServerTimeoutSec 120` | 等待翻译服务就绪的秒数，默认 60；首次导入依赖较慢的电脑可调大 |
+| `-StopServerOnExit` | 脚本保持运行，关闭 Zotero 后自动停止它启动的翻译服务 |
+
+翻译服务在后台运行，进程号记录在 `runtime/pdf2zh.pid`；需要时运行 `scripts\Stop-Translation.ps1` 停止（只会结束本项目虚拟环境中的进程）。服务未能就绪时，脚本会结束该进程并显示错误日志末尾；上一次的日志保留为 `runtime/pdf2zh.log.1`。同一配置目录的 Zotero 已打开时，脚本不会重复启动。
+
+浏览器打开 `http://127.0.0.1:8890/` 可查看翻译进度面板：跟随系统深浅色，运行中任务实时计时，服务重启后自动重连。
+
+完整包已带阅读器程序。只克隆源码的用户，可将 Release 的 `Zotero-10.0.6-win-x64-clean.zip` 放在项目根目录，再执行 Setup；或通过 `-AppArchive` 指定文件。`-SkipPython` 仅准备独立阅读器与插件，全文翻译服务仍需后续安装依赖。从仓库运行 Setup 安装的是仓库内的插件版本（深色模式 1.0.3），比 2026.10.20 Release 压缩包中的 1.0.2 新。
 
 ## 隐私与发布边界
 
@@ -73,14 +85,28 @@ src/plugins/                  XPI 中对应的解包脚本与资源
 pdf2zh/server/                本地翻译服务与示例配置
 pdf2zh/requirements-managed-lock.txt
 pdf2zh/layout-runtime-requirements.txt
-tools/                        公式保护和 PDF 分卷内核
-scripts/                      全新配置目录安装与启动脚本
+tools/                        公式保护、PDF 分卷内核、XPI 校验与打包
+scripts/                      安装、启动与停止翻译服务脚本
+tests/js/                     本地维护插件的 jsdom 测试
 development/legacy-local-patches/
 docs/                         方案、隐私与验证说明
 licenses/                     上游许可证
 ```
 
 翻译原环境与独立版面内核分别安装，避免把旧 `pdf2zh-next` 的依赖约束直接升级破坏。当前保护适用于已配置的 OpenAI、DeepSeek 或 OpenAICompatible 翻译路径；复杂版式不能保证百分之百还原，重要公式仍需对照原文。
+
+常用检查（CI 在每次推送时于 Windows 上执行同样的步骤，见 [.github/workflows/ci.yml](.github/workflows/ci.yml)）：
+
+```powershell
+python tools\plugin_xpi.py check                     # XPI、manifest.json 与 src/plugins 逐字节一致
+python tools\privacy_scan.py . --report $env:TEMP\privacy.json
+cd pdf2zh\server; python -m pytest tests -q          # 合成 PDF 回归测试
+cd tests\js; npm ci; npm test                        # 深色模式插件 jsdom 测试
+```
+
+修改 `src/plugins/<id>` 后，先在插件自己的 `manifest.json` 提升版本号，再运行 `python tools\plugin_xpi.py build <id>`：固定时间戳与文件顺序重建 XPI（同一源码总得到同一 SHA-256），并更新根目录 `manifest.json`。只重建确实修改过的插件，上游 XPI 保持原字节。`.gitattributes` 禁止 Git 改写 `src/plugins` 的换行符，否则 Windows 的 `core.autocrlf` 会让源码与 XPI 不一致。
+
+公式预处理先用 PyMuPDF 找出含小位图的页面，只对这些页面运行 pypdf 内容流解析；结果与逐页解析完全相同，300 页合成文档上从约 5.7 秒降到 1.6 秒。
 
 Release 还提供上游源码快照，以便获取原始开发工程。部署包中的解包 JavaScript 与当前插件一一对应；不要将它误称为完整 TypeScript 开发工程。后续改进应在对应上游源码中维护，保留本机修改并重建 XPI。
 

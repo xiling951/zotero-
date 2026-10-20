@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    # The bundle targets Windows x64; run the scripts and tests where they ship.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Privacy scan
+        run: python tools/privacy_scan.py . --report "$env:RUNNER_TEMP/privacy-report.json"
+
+      - name: XPIs match manifest.json and src/plugins
+        run: python tools/plugin_xpi.py check
+
+      - name: PowerShell syntax
+        shell: powershell
+        run: |
+          $failed = $false
+          foreach ($script in Get-ChildItem scripts -Filter *.ps1) {
+            $errors = $null
+            [void][Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$null, [ref]$errors)
+            foreach ($e in $errors) { Write-Output "$($script.Name): $e"; $failed = $true }
+          }
+          if ($failed) { exit 1 }
+
+      - name: Python tests (synthetic PDFs only)
+        working-directory: pdf2zh/server
+        run: |
+          python -m pip install --disable-pip-version-check flask toml pypdf pymupdf==1.26.7 packaging pydantic pytest
+          python -m pytest tests -q
+
+      - name: Plugin tests (jsdom)
+        working-directory: tests/js
+        run: |
+          npm ci
+          npm test
