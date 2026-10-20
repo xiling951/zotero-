@@ -3,513 +3,556 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zotero-PDF2zh | guaguastandup - PDF翻译进度监控</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>PDF2zh 翻译服务 · 进度面板</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        background: #f0f2f5;
-        min-height: 100vh;
-        padding: 20px;
-        color: #333;
+      /* ========== Design tokens ========== */
+      :root {
+        --bg: #f4f5f8;
+        --surface: #ffffff;
+        --surface-2: #f7f8fb;
+        --surface-3: #eef0f5;
+        --border: #e3e6ee;
+        --border-strong: #cfd4e0;
+        --text: #1d2130;
+        --text-2: #4a5165;
+        --text-3: #7c8396;
+        --accent: #4f5bd5;
+        --accent-hover: #4350c4;
+        --accent-soft: #eceefe;
+        --accent-text: #3b47b8;
+        --success: #1f8f5f;
+        --success-soft: #e5f5ed;
+        --danger: #c8443c;
+        --danger-soft: #fcebea;
+        --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.06);
+        --shadow: 0 1px 2px rgba(20, 24, 40, 0.05), 0 8px 24px rgba(20, 24, 40, 0.06);
+        --shadow-lg: 0 24px 64px rgba(10, 12, 24, 0.28);
+        --radius: 14px;
+        --radius-sm: 9px;
+        --header-bg: rgba(255, 255, 255, 0.82);
+        --mono: "Cascadia Code", "SF Mono", Consolas, monospace;
       }
-      .container { max-width: 1200px; margin: 0 auto; }
+      :root[data-theme="dark"] {
+        --bg: #12151c;
+        --surface: #1a1e27;
+        --surface-2: #20252f;
+        --surface-3: #272d39;
+        --border: #2c3240;
+        --border-strong: #3b4354;
+        --text: #e7eaf1;
+        --text-2: #b4bccb;
+        --text-3: #848da0;
+        --accent: #7c88ff;
+        --accent-hover: #929cff;
+        --accent-soft: #262c4a;
+        --accent-text: #aab3ff;
+        --success: #5fd29b;
+        --success-soft: #173326;
+        --danger: #ff8a82;
+        --danger-soft: #3a1f21;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 10px 28px rgba(0, 0, 0, 0.25);
+        --header-bg: rgba(18, 21, 28, 0.82);
+        color-scheme: dark;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.55;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--accent-text); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      button { font: inherit; color: inherit; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+      svg.icon { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
       /* ========== Header ========== */
-      .header {
-        background: white;
-        border-radius: 12px;
-        padding: 24px 30px;
-        margin-bottom: 0;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        gap: 16px;
+      .topbar {
+        position: sticky; top: 0; z-index: 50;
+        background: var(--header-bg);
+        backdrop-filter: saturate(160%) blur(14px);
+        -webkit-backdrop-filter: saturate(160%) blur(14px);
+        border-bottom: 1px solid var(--border);
       }
-      .header-icon { width: 48px; height: 48px; border-radius: 10px; }
-      .header-text h1 { color: #667eea; font-size: 26px; }
-      .header-text p { color: #888; font-size: 13px; margin-top: 4px; }
-      .header-text p a { color: #667eea; text-decoration: none; }
-      .header-text p a:hover { text-decoration: underline; }
-
-      /* ========== Tab Navigation ========== */
-      .tab-nav {
-        display: flex;
-        background: white;
-        border-radius: 0 0 12px 12px;
-        padding: 0 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-        overflow-x: auto;
+      .topbar-inner {
+        max-width: 1120px; margin: 0 auto; padding: 12px 24px;
+        display: flex; align-items: center; gap: 20px;
+      }
+      .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .brand img { width: 34px; height: 34px; border-radius: 9px; box-shadow: var(--shadow-sm); }
+      .brand-title { font-size: 16px; font-weight: 650; letter-spacing: 0.01em; white-space: nowrap; }
+      .brand-sub { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+      .version-chip {
+        font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text-3);
+        border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; margin-left: 8px; vertical-align: 2px;
+      }
+      .tabs {
+        display: inline-flex; gap: 2px; padding: 3px; margin-left: auto;
+        background: var(--surface-3); border-radius: 11px;
       }
       .tab-btn {
-        border: none;
-        background: transparent;
-        padding: 14px 20px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #888;
-        cursor: pointer;
-        border-bottom: 3px solid transparent;
-        transition: all 0.2s;
-        white-space: nowrap;
+        border: none; background: transparent; cursor: pointer;
+        padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 550;
+        color: var(--text-2); display: inline-flex; align-items: center; gap: 7px;
+        transition: background .15s, color .15s, box-shadow .15s; white-space: nowrap;
       }
-      .tab-btn:hover { color: #667eea; }
-      .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
-      .tab-btn .tab-badge {
-        background: #667eea;
-        color: white;
-        font-size: 11px;
-        padding: 2px 7px;
-        border-radius: 10px;
-        margin-left: 6px;
+      .tab-btn:hover { color: var(--text); }
+      .tab-btn.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+      .tab-badge {
+        min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+        background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
       }
-      .tab-content { display: none; }
+      .top-actions { display: flex; align-items: center; gap: 8px; }
+      .conn {
+        display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px;
+        border-radius: 999px; font-size: 12px; font-weight: 550; white-space: nowrap;
+        background: var(--surface-3); color: var(--text-2);
+      }
+      .conn .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+      .conn.connected { background: var(--success-soft); color: var(--success); }
+      .conn.connected .dot { background: var(--success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent); }
+      .conn.disconnected { background: var(--danger-soft); color: var(--danger); }
+      .conn.disconnected .dot { background: var(--danger); }
+      .icon-btn {
+        width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border);
+        background: var(--surface); color: var(--text-2); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s, border-color .15s;
+      }
+      .icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+      .icon-btn.on { color: var(--accent-text); background: var(--accent-soft); border-color: transparent; }
+
+      /* ========== Layout ========== */
+      main { max-width: 1120px; margin: 0 auto; padding: 24px 24px 48px; }
+      .tab-content { display: none; animation: fade .18s ease; }
       .tab-content.active { display: block; }
+      @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+      .card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+      }
+      .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+      .section-title { font-size: 17px; font-weight: 650; }
+      .section-hint { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
 
-      /* ========== Notice Banner ========== */
-      .notice-banner {
-        background: linear-gradient(135deg, #fff7e6 0%, #fff1d6 100%);
-        border: 1px solid #ffd591;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        font-size: 13px;
-        color: #8a6d3b;
-        line-height: 1.7;
+      /* ========== Buttons & controls ========== */
+      .btn {
+        display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+        padding: 7px 13px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 550;
+        border: 1px solid var(--border); background: var(--surface); color: var(--text);
+        transition: background .15s, border-color .15s, color .15s;
       }
-      .notice-banner strong { color: #d48806; }
-      .notice-banner a { color: #667eea; font-weight: 600; }
-
-      /* ========== Help Section ========== */
-      .help-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-      }
-      @media (max-width: 768px) { .help-grid { grid-template-columns: 1fr; } }
-      .help-card {
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      }
-      .help-card h3 {
-        font-size: 15px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .glossary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-      .glossary-table td { padding: 7px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-      .glossary-table td:first-child {
-        font-family: 'SF Mono', Consolas, monospace;
-        font-weight: 600;
-        color: #5568d3;
-        white-space: nowrap;
-        width: 110px;
-      }
-      .glossary-table tr:last-child td { border-bottom: none; }
-      .help-link-list { list-style: none; padding: 0; }
-      .help-link-list li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-      .help-link-list li:last-child { border-bottom: none; }
-      .help-link-list a { color: #667eea; text-decoration: none; font-weight: 500; }
-      .help-link-list a:hover { text-decoration: underline; }
-      .help-link-list .link-desc { color: #999; font-size: 12px; margin-top: 2px; }
-      .config-display { font-size: 13px; color: #555; }
-      .config-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #f0f0f0; }
-      .config-row:last-child { border-bottom: none; }
-      .config-key { font-weight: 500; color: #333; }
-      .config-val { color: #667eea; font-family: 'SF Mono', Consolas, monospace; font-size: 12px; }
-
-      /* ========== Status Card (Tasks Tab) ========== */
-      .status-card {
-        background: white;
-        border-radius: 12px;
-        padding: 30px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      }
-      .status-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 25px;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .status-title { font-size: 20px; font-weight: 600; color: #333; }
-      .status-subtitle { margin-top: 6px; font-size: 12px; color: #888; }
-      .status-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
-
-      /* Segmented buttons */
-      .segmented { display: inline-flex; background: #f0f2ff; border: 1px solid #dfe5ff; border-radius: 10px; overflow: hidden; }
+      .btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
+      .btn.danger-ghost { color: var(--danger); }
+      .btn.danger-ghost:hover { background: var(--danger-soft); border-color: transparent; }
+      .segmented { display: inline-flex; padding: 3px; gap: 2px; background: var(--surface-3); border-radius: 10px; }
       .seg-btn {
-        border: none; background: transparent; padding: 8px 12px; font-size: 12px;
-        font-weight: 700; color: #5568d3; cursor: pointer;
-        transition: background 0.2s, color 0.2s;
+        border: none; background: transparent; cursor: pointer; padding: 5px 12px;
+        border-radius: 7px; font-size: 12.5px; font-weight: 550; color: var(--text-2);
       }
-      .seg-btn:hover { background: rgba(102,126,234,0.12); }
-      .seg-btn.active { background: #667eea; color: #fff; }
+      .seg-btn:hover { color: var(--text); }
+      .seg-btn.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+      .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .toolbar .divider { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
 
-      .status-badge { padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; }
-      .status-badge.active { background: #e3fcef; color: #00a86b; }
-      .status-badge.idle { background: #f0f0f0; color: #666; }
+      /* ========== Stats ========== */
+      .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+      .stat { padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+      .stat-icon {
+        width: 40px; height: 40px; border-radius: 11px; flex: none;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .stat-icon svg.icon { width: 20px; height: 20px; }
+      .stat.active .stat-icon { background: var(--accent-soft); color: var(--accent-text); }
+      .stat.success .stat-icon { background: var(--success-soft); color: var(--success); }
+      .stat.failed .stat-icon { background: var(--danger-soft); color: var(--danger); }
+      .stat-value { font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+      .stat-label { font-size: 12.5px; color: var(--text-3); }
 
-      /* Sound toggle */
-      .sound-toggle {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: #f0f2ff; padding: 6px 12px; border-radius: 20px;
-        cursor: pointer; font-size: 13px; font-weight: 600; color: #5568d3;
-        user-select: none; transition: all 0.2s; border: 1px solid transparent;
+      /* ========== Task cards ========== */
+      .tasks-container, .history-list { display: flex; flex-direction: column; gap: 12px; }
+      .task-card { padding: 18px 20px; transition: border-color .2s; }
+      .task-card:hover { border-color: var(--border-strong); }
+      .task-header { display: flex; align-items: center; gap: 12px; }
+      .file-icon {
+        width: 36px; height: 36px; border-radius: 10px; flex: none;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--accent-soft); color: var(--accent-text);
       }
-      .sound-toggle:hover { background: #e0e4ff; }
-      .sound-toggle.muted { background: #f5f5f5; color: #999; text-decoration: line-through; }
-      .sound-toggle input { display: none; }
-      .action-btn {
-        border: 1px solid #dfe5ff; background: #f0f2ff; color: #5568d3;
-        border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
-        transition: all 0.2s; line-height: 1;
+      .task-card.completed .file-icon { background: var(--success-soft); color: var(--success); }
+      .task-card.failed .file-icon { background: var(--danger-soft); color: var(--danger); }
+      .task-title { min-width: 0; flex: 1; }
+      .task-filename { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .task-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px; flex: none;
+        padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+        background: var(--surface-3); color: var(--text-2);
       }
-      .action-btn:hover { background: #e0e4ff; border-color: #b0baff; }
-
-      /* Tasks container */
-      .tasks-container { display: flex; flex-direction: column; gap: 15px; }
-      .task-card {
-        background: #f8f9fa; border-radius: 12px; padding: 20px;
-        border-left: 4px solid #667eea; transition: all 0.3s;
+      .badge.active { background: var(--accent-soft); color: var(--accent-text); }
+      .badge.active::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.4s ease-in-out infinite; }
+      .badge.completed { background: var(--success-soft); color: var(--success); }
+      .badge.failed { background: var(--danger-soft); color: var(--danger); }
+      @keyframes pulse { 50% { opacity: .35; } }
+      .progress-row { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; }
+      .task-progress-bar { flex: 1; height: 7px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+      .task-progress-fill { height: 100%; border-radius: inherit; background: var(--accent); transition: width .5s ease; }
+      .task-card.active .task-progress-fill {
+        background-color: var(--accent);
+        background-image: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.3) 50%, transparent 70%);
+        background-size: 200% 100%; animation: shimmer 1.8s linear infinite;
       }
-      .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-      .task-card.completed { border-left-color: #2e7d32; }
-      .task-card.failed { border-left-color: #c62828; }
-      .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-      .task-filename { font-size: 16px; font-weight: 600; color: #333; }
-      .task-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-      .task-badge.active { background: #e3fcef; color: #00a86b; }
-      .task-badge.completed { background: #e8f5e9; color: #2e7d32; }
-      .task-badge.failed { background: #ffebee; color: #c62828; }
-      .task-progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
-      .task-progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s; }
-      .task-info {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px; margin-top: 12px; font-size: 13px;
+      .task-card.completed .task-progress-fill { background: var(--success); }
+      .task-card.failed .task-progress-fill { background: var(--danger); }
+      @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+      .progress-value { font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; min-width: 40px; text-align: right; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip {
+        display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+        padding: 3px 9px; border-radius: 7px; font-size: 12px; color: var(--text-2);
+        background: var(--surface-2); border: 1px solid var(--border);
       }
-      .task-info-item { display: flex; flex-direction: column; }
-      .task-info-label { color: #666; font-size: 11px; margin-bottom: 2px; }
-      .task-info-value { color: #333; font-weight: 500; }
-      .task-message { margin-top: 10px; padding: 8px 12px; background: #fff3cd; border-radius: 6px; font-size: 13px; display: none; }
-      .task-message.error { background: #ffebee; color: #c62828; }
-      .task-message.success { background: #e8f5e9; color: #2e7d32; }
-      /* Per-task config toggle */
+      .chip svg.icon { width: 13px; height: 13px; color: var(--text-3); }
+      .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .chip b { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+      .task-message {
+        margin-top: 12px; padding: 9px 12px; border-radius: var(--radius-sm);
+        font-size: 12.5px; background: var(--surface-2); color: var(--text-2);
+        border-left: 3px solid var(--border-strong); overflow-wrap: anywhere;
+      }
+      .task-message.error { background: var(--danger-soft); color: var(--danger); border-left-color: var(--danger); }
+      .task-message.success { background: var(--success-soft); color: var(--success); border-left-color: var(--success); }
       .task-config-toggle {
-        margin-top: 8px; font-size: 12px; color: #667eea; cursor: pointer;
-        user-select: none; font-weight: 500; background: none; border: none; padding: 0; font-family: inherit;
+        margin-top: 10px; display: inline-flex; align-items: center; gap: 4px;
+        font-size: 12.5px; font-weight: 550; color: var(--accent-text);
+        background: none; border: none; cursor: pointer; padding: 2px 0;
       }
-      .task-config-toggle:hover { text-decoration: underline; }
-      .task-config-detail {
-        display: none; margin-top: 8px; padding: 10px 12px; background: #f0f2ff;
-        border-radius: 6px; font-size: 12px; color: #555;
-      }
+      .task-config-toggle svg.icon { width: 14px; height: 14px; transition: transform .2s; }
+      .task-config-toggle[aria-expanded="true"] svg.icon { transform: rotate(180deg); }
+      .task-config-detail { display: none; margin-top: 8px; padding: 6px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
       .task-config-detail.show { display: block; }
+      .task-config-detail, .config-block { max-width: 560px; }
 
-      /* ========== History Section ========== */
-      .history-card {
-        background: white; border-radius: 12px; padding: 30px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      /* ========== Key/value rows ========== */
+      .config-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px; }
+      .config-row:last-child { border-bottom: none; }
+      .config-key { color: var(--text-3); flex: none; }
+      .config-val { color: var(--text); font-family: var(--mono); font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+
+      /* ========== History ========== */
+      .history-item { overflow: hidden; }
+      .history-summary {
+        display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer;
+        transition: background .15s;
       }
-      .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
-      .history-title { font-size: 20px; font-weight: 600; color: #333; }
-      .btn { border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.3s; }
-      .refresh-btn { background: #667eea; color: white; }
-      .refresh-btn:hover { background: #5568d3; }
-      .clear-btn { background: #e57373; color: white; margin-left: 10px; }
-      .clear-btn:hover { background: #d32f2f; }
-      .history-list { display: flex; flex-direction: column; gap: 15px; }
-      .history-item {
-        background: #f8f9fa; border-radius: 8px; padding: 15px 20px;
-        border-left: 4px solid #667eea; cursor: pointer; transition: all 0.2s;
+      .history-summary:hover { background: var(--surface-2); }
+      .status-icon {
+        width: 30px; height: 30px; border-radius: 50%; flex: none;
+        display: inline-flex; align-items: center; justify-content: center;
       }
-      .history-item:hover { transform: translateX(5px); background: #f1f3f5; }
-      .history-item.failed { border-left-color: #c62828; }
-      .history-item.success { border-left-color: #2e7d32; }
-      .history-summary { display: flex; justify-content: space-between; align-items: center; }
-      .history-filename { font-size: 16px; font-weight: 600; color: #333; }
-      .history-time { font-size: 12px; color: #888; margin-top: 4px; }
-      .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-      .status-dot.success { background-color: #2e7d32; }
-      .status-dot.failed { background-color: #c62828; }
-      .status-text { font-size: 13px; font-weight: 600; color: #555; }
-      .history-details {
-        display: none; margin-top: 15px; padding-top: 15px;
-        border-top: 1px solid #e0e0e0; cursor: default;
+      .history-item.success .status-icon { background: var(--success-soft); color: var(--success); }
+      .history-item.failed .status-icon { background: var(--danger-soft); color: var(--danger); }
+      .history-main { min-width: 0; flex: 1; }
+      .history-filename { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .history-meta { font-size: 12px; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .chevron { color: var(--text-3); transition: transform .2s; }
+      .history-item.expanded .chevron { transform: rotate(180deg); }
+      .history-details { display: none; padding: 4px 18px 18px 60px; cursor: default; }
+      .history-item.expanded .history-details { display: block; animation: fade .18s ease; }
+      .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 18px; }
+      .meta-grid div { font-size: 12.5px; color: var(--text-2); overflow-wrap: anywhere; }
+      .meta-grid strong { color: var(--text-3); font-weight: 500; margin-right: 6px; }
+      .detail-label { font-size: 12px; font-weight: 600; color: var(--text-3); letter-spacing: .04em; margin: 14px 0 8px; }
+      .history-files { display: flex; flex-wrap: wrap; gap: 8px; }
+      .file-action-group {
+        display: inline-flex; align-items: stretch; border: 1px solid var(--border);
+        border-radius: var(--radius-sm); overflow: hidden; background: var(--surface);
       }
-      .history-item.expanded .history-details { display: block; animation: slideDown 0.3s ease; }
-      .history-item.expanded { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-      @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-      .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; color: #555; margin-bottom: 10px; }
-      .history-files { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-      .file-action-group { display: inline-flex; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; }
       .file-type-tag {
-        display: inline-flex; align-items: center; padding: 6px 10px;
-        background: #f0f2ff; color: #5568d3; font-size: 12px; font-weight: 600;
-        border-right: 1px solid #e0e0e0; white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+        background: var(--surface-2); border-right: 1px solid var(--border); font-size: 12px;
       }
-      .file-type-tag .ft-code { font-family: 'SF Mono', Consolas, monospace; margin-right: 4px; }
-      .file-type-tag .ft-desc { color: #888; font-weight: 400; }
+      .ft-code { font-family: var(--mono); font-weight: 600; color: var(--accent-text); }
+      .ft-desc { color: var(--text-3); }
       .file-btn {
-        display: inline-flex; align-items: center; gap: 5px;
-        background: white; padding: 6px 12px; text-decoration: none;
-        color: #667eea; font-size: 13px; transition: all 0.2s;
-        border: none; cursor: pointer; height: 100%;
+        display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px;
+        font-size: 12.5px; color: var(--text-2); background: none; border: none; cursor: pointer;
       }
-      .file-btn:hover { background: #f0f4ff; }
-      .file-btn.download { border-right: 1px solid #e0e0e0; }
-      .file-btn svg { width: 14px; height: 14px; }
-      .error-message { background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
-      .empty-state { text-align: center; padding: 60px 20px; color: #666; }
-      .empty-tasks { text-align: center; padding: 40px; color: #999; }
-      .empty-state svg { width: 80px; height: 80px; margin-bottom: 20px; opacity: 0.3; }
+      .file-btn:hover { background: var(--accent-soft); color: var(--accent-text); text-decoration: none; }
+      .file-btn + .file-btn { border-left: 1px solid var(--border); }
+      .file-btn svg.icon { width: 14px; height: 14px; }
+      .error-message {
+        margin-top: 14px; padding: 10px 12px; border-radius: var(--radius-sm);
+        background: var(--danger-soft); color: var(--danger); font-size: 12.5px; overflow-wrap: anywhere;
+      }
 
-      /* ========== Modal ========== */
+      /* ========== Empty states ========== */
+      .empty-tasks { text-align: center; padding: 52px 20px; color: var(--text-3); }
+      .empty-art {
+        width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 14px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--surface-3); color: var(--text-3);
+      }
+      .empty-art svg.icon { width: 26px; height: 26px; }
+      .empty-title { font-size: 14.5px; font-weight: 600; color: var(--text-2); }
+      .empty-hint { font-size: 12.5px; margin-top: 4px; }
+
+      /* ========== Help tab ========== */
+      .callout {
+        display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; margin-bottom: 18px;
+        border-radius: var(--radius); background: var(--accent-soft); color: var(--text-2); font-size: 13px;
+      }
+      .callout svg.icon { color: var(--accent-text); margin-top: 2px; }
+      .callout strong { color: var(--text); }
+      .help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .help-card { padding: 20px 22px; }
+      .help-card h3 { display: flex; align-items: center; gap: 9px; font-size: 14.5px; font-weight: 650; margin-bottom: 12px; }
+      .help-card h3 svg.icon { color: var(--accent-text); }
+      .glossary-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      .glossary-table td { padding: 7px 0; border-bottom: 1px dashed var(--border); vertical-align: top; color: var(--text-2); }
+      .glossary-table tr:last-child td { border-bottom: none; }
+      .glossary-table td:first-child { width: 112px; padding-right: 10px; font-family: var(--mono); font-weight: 600; color: var(--accent-text); white-space: nowrap; }
+      .link-list { list-style: none; }
+      .link-list li { border-bottom: 1px dashed var(--border); }
+      .link-list li:last-child { border-bottom: none; }
+      .link-list a, .link-list .tip { display: flex; align-items: center; gap: 10px; padding: 9px 0; color: var(--text); }
+      .link-list a:hover { text-decoration: none; color: var(--accent-text); }
+      .link-list .grow { flex: 1; min-width: 0; }
+      .link-list .title { font-weight: 550; font-size: 13px; }
+      .link-desc { color: var(--text-3); font-size: 12px; }
+      .link-list a svg.icon { color: var(--text-3); }
+      .muted { color: var(--text-3); padding: 8px 0; font-size: 12.5px; }
+      footer { text-align: center; color: var(--text-3); font-size: 12px; margin-top: 28px; }
+
+      /* ========== Modal & toast ========== */
       .modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7); z-index: 2000; display: none;
-        justify-content: center; align-items: center;
+        position: fixed; inset: 0; z-index: 200; display: none;
+        background: rgba(8, 10, 18, 0.55); backdrop-filter: blur(3px);
+        justify-content: center; align-items: center; padding: 3vh 3vw;
       }
-      .modal-container { background: white; width: 90%; height: 90%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-      .modal-header { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-      .modal-title { font-weight: 600; font-size: 16px; }
-      .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
-      .modal-body { flex: 1; background: #eee; position: relative; }
+      .modal-container {
+        width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
+        background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+      }
+      .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+      .modal-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .modal-body { flex: 1; background: var(--surface-3); }
       .pdf-frame { width: 100%; height: 100%; border: none; }
-
-      /* Connection status */
-      .connection-status {
-        position: fixed; top: 20px; right: 20px; padding: 10px 15px;
-        border-radius: 8px; font-size: 12px; font-weight: 600; z-index: 1000;
+      .toast {
+        position: fixed; left: 50%; bottom: 28px; z-index: 300; transform: translate(-50%, 16px);
+        padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 550;
+        background: var(--text); color: var(--bg); box-shadow: var(--shadow-lg);
+        opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
       }
-      .connection-status.connected { background: #e8f5e9; color: #2e7d32; }
-      .connection-status.disconnected { background: #ffebee; color: #c62828; }
+      .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-      button:focus-visible, a:focus-visible { outline: 2px solid #667eea; outline-offset: 2px; }
+      @media (max-width: 860px) {
+        .topbar-inner { flex-wrap: wrap; gap: 10px 14px; padding: 10px 16px; }
+        .tabs { order: 3; margin-left: 0; width: 100%; }
+        .tab-btn { flex: 1; justify-content: center; }
+        .top-actions { margin-left: auto; }
+        .brand-sub { display: none; }
+        main { padding: 18px 16px 40px; }
+        .help-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .stats { gap: 8px; }
+        .stat { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; }
+        .stat-icon { width: 32px; height: 32px; }
+        .history-details { padding-left: 18px; }
+        .history-summary .badge { display: none; }
+        .conn .label { display: none; }
+        .tab-btn { padding: 7px 6px; gap: 5px; }
+        .tab-btn > svg.icon { display: none; }
+        .section-head .toolbar { width: 100%; flex-wrap: nowrap; }
+        .section-head .segmented { flex: 1; }
+        .section-head .seg-btn { flex: 1; padding: 5px 4px; }
+        .toolbar .divider { display: none; }
+      }
       @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after { transition: none !important; animation: none !important; }
-      }
-
-      /* ========== Dark theme (follows the system / Zotero setting) ========== */
-      @media (prefers-color-scheme: dark) {
-        :root { color-scheme: dark; }
-        body { background: #161a21; color: #d8dee9; }
-        .header, .tab-nav, .help-card, .status-card, .history-card { background: #1f242d; box-shadow: 0 2px 14px rgba(0,0,0,0.35); }
-        .header-text h1, .tab-btn:hover, .tab-btn.active { color: #9aa9ff; }
-        .tab-btn.active { border-bottom-color: #9aa9ff; }
-        .header-text p, .tab-btn, .status-subtitle, .history-time, .help-link-list .link-desc { color: #9aa5b5; }
-        .help-card h3, .status-title, .history-title, .task-filename, .history-filename, .config-key, .task-info-value { color: #e5e9f0; }
-        .task-info-label, .status-text, .config-display, .meta-grid { color: #aeb8c6; }
-        .notice-banner { background: #2c2618; border-color: #6b5520; color: #e8d3a2; }
-        .notice-banner strong { color: #ffc35c; }
-        .glossary-table td, .help-link-list li, .config-row { border-bottom-color: #2f3642; }
-        .glossary-table td:first-child, .config-val, .help-link-list a, .header-text p a, .notice-banner a, .task-config-toggle { color: #9aa9ff; }
-        .segmented, .sound-toggle, .action-btn, .task-config-detail, .file-type-tag { background: #262d3a; border-color: #3a4354; color: #b4c0ff; }
-        .seg-btn { color: #b4c0ff; }
-        .seg-btn.active { background: #5f6fd8; color: #fff; }
-        .sound-toggle:hover, .action-btn:hover { background: #2f3850; }
-        .sound-toggle.muted { background: #232831; color: #7d8794; }
-        .status-badge.idle { background: #2a303b; color: #aeb8c6; }
-        .status-badge.active, .task-badge.active { background: #173528; color: #6fdca8; }
-        .task-card, .history-item { background: #232933; }
-        .history-item:hover { background: #29303c; }
-        .history-item.expanded { background: #262d38; }
-        .history-details { border-top-color: #364050; }
-        .history-details strong { color: #d8dee9 !important; }
-        .task-progress-bar { background: #343c4a; }
-        .task-message { background: #3a3220; color: #f3dca6; }
-        .task-message.error, .error-message, .task-badge.failed, .connection-status.disconnected { background: #3d2224; color: #ffaaa5; }
-        .task-message.success, .task-badge.completed, .connection-status.connected { background: #1b3424; color: #9fdcb0; }
-        .file-action-group { border-color: #3a4354; }
-        .file-type-tag { border-right-color: #3a4354; }
-        .file-type-tag .ft-desc { color: #9aa5b5; }
-        .file-btn { background: #1f242d; color: #9aa9ff; }
-        .file-btn:hover { background: #2a3142; }
-        .file-btn.download { border-right-color: #3a4354; }
-        .empty-state, .empty-tasks { color: #8b95a3; }
-        .modal-container { background: #1f242d; }
-        .modal-header { background: #262c36; border-bottom-color: #364050; }
-        .close-modal { color: #c3cbd6; }
-        .modal-body { background: #10131a; }
-      }
-
-      @media (max-width: 640px) {
-        body { padding: 14px; }
-        .header { padding: 18px; }
-        .header-icon { width: 36px; height: 36px; }
-        .header-text h1 { font-size: 20px; }
-        .status-card, .history-card { padding: 18px; }
-        .status-header { align-items: flex-start; }
-        .status-actions { justify-content: flex-start; }
-        .tab-btn { padding: 12px 14px; font-size: 13px; }
+        *, *::before, *::after { animation: none !important; transition: none !important; }
       }
     </style>
+    <script>
+      // Apply the saved theme before first paint to avoid a light flash.
+      (function () {
+        var mode = "system";
+        try { mode = localStorage.getItem("pdf2zh_theme") || "system"; } catch (e) {}
+        var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
   </head>
   <body>
-    <div class="connection-status" id="connectionStatus">连接中...</div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></symbol>
+      <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6v6H9zM9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.1 4.5 4.5 0 0 0 6.5 19z"/></symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+      <symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M8.7 3A6 6 0 0 1 18 8c0 2.6.4 4.5 1 5.9M17 17H3s3-2 3-9c0-.8.15-1.6.43-2.3M10.3 21a1.94 1.94 0 0 0 3.4 0M2 2l20 20"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 20V9M7 14l5-5 5 5M5 4h14"/></symbol>
+      <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12A9 9 0 0 1 18.5 5.8L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+      <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1 1M14 10a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1-1"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+      <symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+      <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></symbol>
+    </svg>
 
-    <div class="modal-overlay" id="pdfModal">
+    <div class="modal-overlay" id="pdfModal" role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle">
       <div class="modal-container">
         <div class="modal-header">
           <div class="modal-title" id="pdfModalTitle">PDF 预览</div>
-          <button class="close-modal" onclick="closePdfPreview()">&#215;</button>
+          <button class="icon-btn" onclick="closePdfPreview()" title="关闭 (Esc)" aria-label="关闭预览"><svg class="icon"><use href="#i-x"/></svg></button>
         </div>
-        <div class="modal-body">
-          <iframe class="pdf-frame" id="pdfFrame" src=""></iframe>
-        </div>
+        <div class="modal-body"><iframe class="pdf-frame" id="pdfFrame" src="" title="PDF 预览"></iframe></div>
       </div>
     </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <div class="container">
-      <!-- Header -->
-      <div class="header">
-        <img src="/favicon.svg" alt="icon" class="header-icon" />
-        <div class="header-text">
-          <h1>Zotero-PDF2zh</h1>
-          <p>by <a href="https://github.com/guaguastandup" target="_blank">guaguastandup</a> &middot; Zotero PDF 全文翻译插件</p>
-        </div>
-      </div>
-
-      <!-- Tab Navigation -->
-      <div class="tab-nav" id="tabNav">
-        <button class="tab-btn active" data-tab="help">帮助与信息</button>
-        <button class="tab-btn" data-tab="tasks">翻译任务 <span class="tab-badge" id="tabTaskBadge" style="display:none">0</span></button>
-        <button class="tab-btn" data-tab="history">翻译历史</button>
-      </div>
-
-      <!-- ==================== Tab: 帮助与信息 ==================== -->
-      <div class="tab-content active" id="tab-help">
-        <div class="notice-banner">
-          <strong>欢迎访问项目主页：</strong>
-          <a href="https://github.com/guaguastandup/zotero-pdf2zh" target="_blank">GitHub 仓库</a>
-          （国内用户可访问 <a href="https://gitee.com/guaguastandup/zotero-pdf2zh" target="_blank">Gitee 镜像</a>）<br>
-          <strong>&#9888;&#65039; 遇到问题？</strong> 请前往
-          <a href="https://zotero-pdf2zh.github.io" target="_blank">官方文档</a>
-          查看使用教程和常见问题汇总。
-          <strong>注意：</strong>第三方教程可能已过时，请以官方文档为准。
-        </div>
-        <div class="help-grid">
-          <div class="help-card">
-            <h3>&#128214; 文件类型说明</h3>
-            <table class="glossary-table">
-              <tr><td>mono</td><td>纯译文 - 仅包含翻译后的内容</td></tr>
-              <tr><td>dual</td><td>双语对照 - 原文与译文上下对照排列</td></tr>
-              <tr><td>mono-cut</td><td>译文裁剪 - 对 mono 文件在宽度 1/2 处裁剪后上下拼接，适合手机阅读</td></tr>
-              <tr><td>dual-cut</td><td>双语裁剪 - 对 dual 文件在宽度 1/2 处裁剪后上下拼接，适合手机阅读</td></tr>
-              <tr><td>compare</td><td>左右对照 - 左边为原文，右边为译文</td></tr>
-              <tr><td>crop-compare</td><td>裁剪对照 - 仅针对双栏 PDF，先竖向裁剪为单栏，再左右拼接</td></tr>
-              <tr><td>LR_dual</td><td>左右双语 - 原文译文左右分栏排列（Left & Right 模式）</td></tr>
-              <tr><td>TB_dual</td><td>上下双语 - 原文译文交替分页排列（Top & Bottom 模式）</td></tr>
-            </table>
-          </div>
-          <div class="help-card">
-            <h3>&#128279; 相关链接</h3>
-            <ul class="help-link-list">
-              <li>
-                <a href="https://github.com/guaguastandup/zotero-pdf2zh" target="_blank">GitHub 仓库</a>
-                <div class="link-desc">项目主页 - 源代码、Issue 反馈、版本发布</div>
-              </li>
-              <li>
-                <a href="https://gitee.com/guaguastandup/zotero-pdf2zh" target="_blank">Gitee 镜像</a>
-                <div class="link-desc">国内镜像仓库（无法访问 GitHub 时使用）</div>
-              </li>
-              <li>
-                <a href="https://zotero-pdf2zh.github.io" target="_blank">官方文档</a>
-                <div class="link-desc">使用教程、常见问题、配置说明</div>
-              </li>
-            </ul>
-          </div>
-          <div class="help-card">
-            <h3>&#9881;&#65039; 当前服务信息</h3>
-            <div class="config-display" id="serverConfigDisplay">
-              <div style="color:#999;padding:10px 0;">加载中...</div>
-            </div>
-          </div>
-          <div class="help-card">
-            <h3>&#128161; 使用提示</h3>
-            <ul class="help-link-list">
-              <li>
-                <strong>翻译期间请勿关闭服务器终端窗口</strong>
-                <div class="link-desc">关闭终端会中断正在进行的翻译任务</div>
-              </li>
-              <li>
-                <strong>翻译完成后会自动播放提示音</strong>
-                <div class="link-desc">可在「翻译任务」页自定义提示音或静音</div>
-              </li>
-              <li>
-                <strong>历史记录保存在浏览器本地</strong>
-                <div class="link-desc">清除浏览器缓存会丢失历史记录，但不影响已翻译的文件</div>
-              </li>
-              <li>
-                <strong>QQ 交流群: 1064435415</strong>
-                <div class="link-desc">入群口令请到 GitHub / Gitee 仓库主页查看 | 提问前请先阅读文档和常见问题</div>
-              </li>
-            </ul>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <img src="/favicon.svg" alt="" />
+          <div>
+            <div class="brand-title">PDF2zh 翻译服务<span class="version-chip" id="versionChip" hidden></span></div>
+            <div class="brand-sub">Zotero PDF 全文翻译 · 本机进度面板</div>
           </div>
         </div>
+        <nav class="tabs" id="tabNav" aria-label="页面">
+          <button class="tab-btn" data-tab="tasks"><svg class="icon"><use href="#i-loader"/></svg>翻译任务<span class="tab-badge" id="tabTaskBadge" style="display:none">0</span></button>
+          <button class="tab-btn" data-tab="history"><svg class="icon"><use href="#i-history"/></svg>翻译历史</button>
+          <button class="tab-btn" data-tab="help"><svg class="icon"><use href="#i-info"/></svg>帮助与信息</button>
+        </nav>
+        <div class="top-actions">
+          <div class="conn" id="connectionStatus"><span class="dot"></span><span class="label">连接中…</span></div>
+          <button class="icon-btn" id="themeBtn" title="主题：跟随系统" aria-label="切换主题"><svg class="icon"><use href="#i-monitor"/></svg></button>
+        </div>
       </div>
+    </header>
 
+    <main>
       <!-- ==================== Tab: 翻译任务 ==================== -->
-      <div class="tab-content" id="tab-tasks">
-        <div class="notice-banner" style="margin-bottom:15px">
-          <strong>&#128308; Windows 用户注意：</strong> 4.0.2 版本暂不支持多 PDF 的进度显示。
+      <section class="tab-content" id="tab-tasks">
+        <div class="stats">
+          <div class="card stat active"><div class="stat-icon"><svg class="icon"><use href="#i-loader"/></svg></div><div><div class="stat-value" id="statActive">0</div><div class="stat-label">进行中</div></div></div>
+          <div class="card stat success"><div class="stat-icon"><svg class="icon"><use href="#i-check"/></svg></div><div><div class="stat-value" id="statSuccess">0</div><div class="stat-label">刚完成</div></div></div>
+          <div class="card stat failed"><div class="stat-icon"><svg class="icon"><use href="#i-alert"/></svg></div><div><div class="stat-value" id="statFailed">0</div><div class="stat-label">失败</div></div></div>
         </div>
-        <div class="status-card">
-          <div class="status-header">
-            <div>
-              <div class="status-title">当前翻译任务</div>
-              <div class="status-subtitle" id="taskStats">进行中 0 &middot; 成功 0 &middot; 失败 0</div>
-            </div>
-            <div class="status-actions">
-              <div class="sound-controls" style="display:flex;gap:8px;align-items:center;margin-right:15px;">
-                <label class="sound-toggle" id="soundBtn" title="开启/关闭提示音">
-                  <input type="checkbox" id="soundCheckbox" checked />
-                  <span id="soundIcon">&#128276;</span>
-                  <span id="soundText">提示音</span>
-                </label>
-                <input type="file" id="soundUploadInput" accept="audio/*" style="display:none" onchange="handleSoundUpload(this)" />
-                <button class="action-btn" onclick="document.getElementById('soundUploadInput').click()" title="上传自定义提示音" style="padding:4px 8px">&#128194; 上传</button>
-                <button class="action-btn" onclick="resetDefaultSound()" title="恢复默认提示音" style="padding:4px 8px">&#8634;</button>
-              </div>
-              <div class="segmented" id="taskFilter">
-                <button class="seg-btn active" data-filter="active">进行中</button>
-                <button class="seg-btn" data-filter="all">全部</button>
-                <button class="seg-btn" data-filter="success">成功</button>
-                <button class="seg-btn" data-filter="failed">失败</button>
-              </div>
-              <div class="status-badge idle" id="taskCount">0 个活动任务</div>
-            </div>
+        <div class="section-head">
+          <div>
+            <div class="section-title">当前任务</div>
+            <div class="section-hint">完成的任务在此保留 30 秒，之后可在「翻译历史」中查看</div>
           </div>
-          <div class="tasks-container" id="tasksContainer">
-            <div class="empty-tasks"><p>暂无活动任务</p></div>
+          <div class="toolbar">
+            <div class="segmented" id="taskFilter" role="group" aria-label="筛选任务">
+              <button class="seg-btn active" data-filter="active">进行中</button>
+              <button class="seg-btn" data-filter="all">全部</button>
+              <button class="seg-btn" data-filter="success">成功</button>
+              <button class="seg-btn" data-filter="failed">失败</button>
+            </div>
+            <span class="divider"></span>
+            <button class="icon-btn on" id="soundBtn" title="完成提示音：开" aria-label="完成提示音" aria-pressed="true"><svg class="icon"><use href="#i-bell"/></svg></button>
+            <input type="file" id="soundUploadInput" accept="audio/*" hidden onchange="handleSoundUpload(this)" />
+            <button class="icon-btn" onclick="document.getElementById('soundUploadInput').click()" title="上传自定义提示音（≤500 KB）" aria-label="上传自定义提示音"><svg class="icon"><use href="#i-upload"/></svg></button>
+            <button class="icon-btn" onclick="resetDefaultSound()" title="恢复默认提示音" aria-label="恢复默认提示音"><svg class="icon"><use href="#i-rotate"/></svg></button>
           </div>
         </div>
-      </div>
+        <div class="tasks-container" id="tasksContainer"></div>
+      </section>
 
       <!-- ==================== Tab: 翻译历史 ==================== -->
-      <div class="tab-content" id="tab-history">
-        <div class="history-card">
-          <div class="history-header">
-            <div class="history-title">翻译历史</div>
-            <div>
-              <button class="btn refresh-btn" onclick="syncHistory()">刷新</button>
-              <button class="btn clear-btn" onclick="clearLocalHistory()">清空记录</button>
-            </div>
+      <section class="tab-content" id="tab-history">
+        <div class="section-head">
+          <div>
+            <div class="section-title">翻译历史</div>
+            <div class="section-hint">记录保存在本浏览器中；清空记录不会删除已翻译的文件</div>
           </div>
-          <div class="history-list" id="historyList"></div>
+          <div class="toolbar">
+            <button class="btn" onclick="syncHistory(true)"><svg class="icon"><use href="#i-refresh"/></svg>刷新</button>
+            <button class="btn danger-ghost" onclick="clearLocalHistory()"><svg class="icon"><use href="#i-trash"/></svg>清空记录</button>
+          </div>
         </div>
-      </div>
-    </div>
+        <div class="history-list" id="historyList"></div>
+      </section>
+
+      <!-- ==================== Tab: 帮助与信息 ==================== -->
+      <section class="tab-content" id="tab-help">
+        <div class="callout">
+          <svg class="icon"><use href="#i-info"/></svg>
+          <div>
+            <strong>遇到问题？</strong>先查看<a href="https://zotero-pdf2zh.github.io" target="_blank" rel="noopener">官方文档</a>的使用教程与常见问题，第三方教程可能已过时。
+            项目主页：<a href="https://github.com/guaguastandup/zotero-pdf2zh" target="_blank" rel="noopener">GitHub</a>（国内可用 <a href="https://gitee.com/guaguastandup/zotero-pdf2zh" target="_blank" rel="noopener">Gitee 镜像</a>）。
+          </div>
+        </div>
+        <div class="help-grid">
+          <div class="card help-card">
+            <h3><svg class="icon"><use href="#i-book"/></svg>文件类型说明</h3>
+            <table class="glossary-table">
+              <tr><td>mono</td><td>纯译文，仅包含翻译后的内容</td></tr>
+              <tr><td>dual</td><td>双语对照，原文与译文上下对照排列</td></tr>
+              <tr><td>mono-cut</td><td>译文裁剪：mono 在宽度 1/2 处裁剪后上下拼接，适合手机阅读</td></tr>
+              <tr><td>dual-cut</td><td>双语裁剪：dual 在宽度 1/2 处裁剪后上下拼接，适合手机阅读</td></tr>
+              <tr><td>compare</td><td>左右对照：左边原文，右边译文</td></tr>
+              <tr><td>crop-compare</td><td>裁剪对照：仅针对双栏 PDF，先竖向裁剪为单栏，再左右拼接</td></tr>
+              <tr><td>LR_dual</td><td>左右双语：原文译文左右分栏排列</td></tr>
+              <tr><td>TB_dual</td><td>上下双语：原文译文交替分页排列</td></tr>
+            </table>
+          </div>
+          <div class="card help-card">
+            <h3><svg class="icon"><use href="#i-settings"/></svg>当前服务信息</h3>
+            <div id="serverConfigDisplay"><div class="muted">加载中…</div></div>
+          </div>
+          <div class="card help-card">
+            <h3><svg class="icon"><use href="#i-link"/></svg>相关链接</h3>
+            <ul class="link-list">
+              <li><a href="https://zotero-pdf2zh.github.io" target="_blank" rel="noopener"><span class="grow"><div class="title">官方文档</div><div class="link-desc">使用教程、常见问题、配置说明</div></span><svg class="icon"><use href="#i-external"/></svg></a></li>
+              <li><a href="https://github.com/guaguastandup/zotero-pdf2zh" target="_blank" rel="noopener"><span class="grow"><div class="title">GitHub 仓库</div><div class="link-desc">源代码、Issue 反馈、版本发布</div></span><svg class="icon"><use href="#i-external"/></svg></a></li>
+              <li><a href="https://gitee.com/guaguastandup/zotero-pdf2zh" target="_blank" rel="noopener"><span class="grow"><div class="title">Gitee 镜像</div><div class="link-desc">无法访问 GitHub 时使用</div></span><svg class="icon"><use href="#i-external"/></svg></a></li>
+            </ul>
+          </div>
+          <div class="card help-card">
+            <h3><svg class="icon"><use href="#i-lightbulb"/></svg>使用提示</h3>
+            <ul class="link-list">
+              <li><div class="tip"><span class="grow"><div class="title">翻译期间保持服务运行</div><div class="link-desc">关闭服务进程会中断正在进行的翻译</div></span></div></li>
+              <li><div class="tip"><span class="grow"><div class="title">完成后自动播放提示音</div><div class="link-desc">可在「翻译任务」页静音，或换成自己的提示音</div></span></div></li>
+              <li><div class="tip"><span class="grow"><div class="title">历史记录保存在本浏览器</div><div class="link-desc">清除浏览器数据会丢失记录，不影响已翻译的文件</div></span></div></li>
+              <li><div class="tip"><span class="grow"><div class="title">QQ 交流群：1064435415</div><div class="link-desc">入群口令见 GitHub / Gitee 主页；提问前请先阅读文档</div></span></div></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <footer>Zotero PDF2zh · 作者 <a href="https://github.com/guaguastandup" target="_blank" rel="noopener">guaguastandup</a> · 本页面只在本机访问</footer>
+    </main>
 
     <script>
       // ================= 全局变量 =================
@@ -522,75 +565,96 @@
       let currentTaskFilter = "active";
       let lastTasksList = [];
       const notifiedTaskIds = new Set();
-      const expandedConfigTasks = new Set();  // 记录展开的配置任务ID
-
-      // 默认提示音 (引用本地文件)
-      const DEFAULT_DING_SOUND = "/bo.mp3";
-      // 自动修复：如果 localStorage 中存储的是旧的 base64 格式，则清除并使用新的默认提示音
-      let storedSound = localStorage.getItem("pdf2zh_custom_sound");
-      if (storedSound && storedSound.startsWith("data:audio/mp3;base64,")) {
-        localStorage.removeItem("pdf2zh_custom_sound");
-        storedSound = null;
-      }
-      let currentSoundSrc = storedSound || DEFAULT_DING_SOUND;
-      let audioObj = new Audio(currentSoundSrc);
-      let isSoundMuted = localStorage.getItem("pdf2zh_sound_muted") === "true";
+      const expandedConfigTasks = new Set();
       const baseTitle = document.title;
+
+      function store(key, value) { try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (e) {} }
+      function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+      const icon = (name, cls = "") => `<svg class="icon ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+
+      // 默认提示音 (引用本地文件)；旧版 base64 默认音会被清理
+      const DEFAULT_DING_SOUND = "/bo.mp3";
+      let storedSound = load("pdf2zh_custom_sound");
+      if (storedSound && storedSound.startsWith("data:audio/mp3;base64,")) { store("pdf2zh_custom_sound", null); storedSound = null; }
+      let audioObj = new Audio(storedSound || DEFAULT_DING_SOUND);
+      let isSoundMuted = load("pdf2zh_sound_muted") === "true";
+
+      function toast(message) {
+        const el = document.getElementById("toast");
+        el.textContent = message;
+        el.classList.add("show");
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => el.classList.remove("show"), 2600);
+      }
+
+      // ================= 主题 =================
+      const THEMES = { system: ["monitor", "跟随系统"], light: ["sun", "浅色"], dark: ["moon", "深色"] };
+      const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+      function themeMode() { const m = load("pdf2zh_theme"); return THEMES[m] ? m : "system"; }
+      function applyTheme() {
+        const mode = themeMode();
+        const dark = mode === "dark" || (mode === "system" && darkQuery.matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        const btn = document.getElementById("themeBtn");
+        btn.innerHTML = icon(THEMES[mode][0]);
+        btn.title = `主题：${THEMES[mode][1]}（点击切换）`;
+      }
+      function cycleTheme() {
+        const order = ["system", "light", "dark"];
+        const next = order[(order.indexOf(themeMode()) + 1) % order.length];
+        store("pdf2zh_theme", next);
+        applyTheme();
+        toast(`主题：${THEMES[next][1]}`);
+      }
+      darkQuery.addEventListener("change", applyTheme);
 
       // ================= Tab 切换 =================
       function switchTab(tabId) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-        const content = document.getElementById('tab-' + tabId);
-        if (btn) btn.classList.add('active');
-        if (content) content.classList.add('active');
-        // 保存当前标签页到 localStorage
-        localStorage.setItem('pdf2zh_current_tab', tabId);
+        if (!document.getElementById("tab-" + tabId)) tabId = "tasks";
+        document.querySelectorAll(".tab-btn").forEach(b => { const on = b.dataset.tab === tabId; b.classList.toggle("active", on); b.setAttribute("aria-selected", String(on)); });
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === "tab-" + tabId));
+        store("pdf2zh_current_tab", tabId);
       }
 
       // ================= 声音控制 =================
-      function initSoundControl() {
-        const checkbox = document.getElementById("soundCheckbox");
+      function updateSoundUI() {
         const btn = document.getElementById("soundBtn");
-        const icon = document.getElementById("soundIcon");
-        const text = document.getElementById("soundText");
-        checkbox.checked = !isSoundMuted;
+        btn.classList.toggle("on", !isSoundMuted);
+        btn.setAttribute("aria-pressed", String(!isSoundMuted));
+        btn.title = isSoundMuted ? "完成提示音：已静音" : "完成提示音：开";
+        btn.innerHTML = icon(isSoundMuted ? "bell-off" : "bell");
+      }
+      function initSoundControl() {
         updateSoundUI();
-        checkbox.addEventListener("change", (e) => {
-          isSoundMuted = !e.target.checked;
-          localStorage.setItem("pdf2zh_sound_muted", isSoundMuted);
+        document.getElementById("soundBtn").addEventListener("click", () => {
+          isSoundMuted = !isSoundMuted;
+          store("pdf2zh_sound_muted", String(isSoundMuted));
           updateSoundUI();
+          toast(isSoundMuted ? "已静音" : "提示音已开启");
           if (!isSoundMuted) playDing(true);
         });
-        function updateSoundUI() {
-          if (isSoundMuted) { btn.classList.add("muted"); icon.textContent = "\u{1F515}"; text.textContent = "已静音"; }
-          else { btn.classList.remove("muted"); icon.textContent = "\u{1F514}"; text.textContent = "提示音"; }
-        }
       }
       function handleSoundUpload(input) {
         const file = input.files[0];
+        input.value = "";
         if (!file) return;
-        if (file.size > 500 * 1024) { alert("音频文件过大！请上传小于 500KB 的文件。"); return; }
+        if (file.size > 500 * 1024) { toast("音频文件过大，请上传小于 500 KB 的文件"); return; }
         const reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = e => {
           try {
             localStorage.setItem("pdf2zh_custom_sound", e.target.result);
-            currentSoundSrc = e.target.result;
-            audioObj = new Audio(currentSoundSrc);
-            alert("自定义提示音设置成功！");
+            audioObj = new Audio(e.target.result);
+            toast("自定义提示音已设置");
             if (!isSoundMuted) playDing(true);
-          } catch (err) { alert("保存失败：浏览器存储空间不足。"); }
+          } catch (err) { toast("保存失败：浏览器存储空间不足"); }
         };
         reader.readAsDataURL(file);
       }
       function resetDefaultSound() {
-        if (confirm("确定要恢复默认提示音吗？")) {
-          localStorage.removeItem("pdf2zh_custom_sound");
-          currentSoundSrc = DEFAULT_DING_SOUND;
-          audioObj = new Audio(currentSoundSrc);
-          if (!isSoundMuted) playDing(true);
-        }
+        store("pdf2zh_custom_sound", null);
+        audioObj = new Audio(DEFAULT_DING_SOUND);
+        toast("已恢复默认提示音");
+        if (!isSoundMuted) playDing(true);
       }
       function playDing(force = false) {
         if (!isSoundMuted || force) { audioObj.currentTime = 0; audioObj.play().catch(() => {}); }
@@ -604,56 +668,55 @@
       }
       function getFileTypeLabel(filename) {
         const lower = filename.toLowerCase();
-        if (lower.includes('crop-compare') || lower.includes('crop.compare')) return { code: 'crop-compare', desc: '裁剪对照(双栏专用)' };
-        if (lower.includes('mono-cut') || lower.includes('mono.cut')) return { code: 'mono-cut', desc: '译文裁剪' };
-        if (lower.includes('dual-cut') || lower.includes('dual.cut')) return { code: 'dual-cut', desc: '双语裁剪' };
-        if (lower.includes('lr_dual')) return { code: 'LR_dual', desc: '左右双语' };
-        if (lower.includes('tb_dual')) return { code: 'TB_dual', desc: '上下双语' };
-        if (lower.includes('compare')) return { code: 'compare', desc: '左右对照' };
-        if (lower.includes('mono')) return { code: 'mono', desc: '纯译文' };
-        if (lower.includes('dual')) return { code: 'dual', desc: '双语对照' };
-        return { code: '', desc: '文件' };
+        if (lower.includes("crop-compare") || lower.includes("crop.compare")) return { code: "crop-compare", desc: "裁剪对照" };
+        if (lower.includes("mono-cut") || lower.includes("mono.cut")) return { code: "mono-cut", desc: "译文裁剪" };
+        if (lower.includes("dual-cut") || lower.includes("dual.cut")) return { code: "dual-cut", desc: "双语裁剪" };
+        if (lower.includes("lr_dual")) return { code: "LR_dual", desc: "左右双语" };
+        if (lower.includes("tb_dual")) return { code: "TB_dual", desc: "上下双语" };
+        if (lower.includes("compare")) return { code: "compare", desc: "左右对照" };
+        if (lower.includes("mono")) return { code: "mono", desc: "纯译文" };
+        if (lower.includes("dual")) return { code: "dual", desc: "双语对照" };
+        return { code: "", desc: "文件" };
       }
       function formatTime(isoString) {
         if (!isoString) return "-";
-        return new Date(isoString).toLocaleString("zh-CN", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+        return new Date(isoString).toLocaleString("zh-CN", { month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+      }
+      function formatDuration(seconds) {
+        seconds = Math.max(0, Math.floor(seconds));
+        const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
+        return h ? `${h}时${String(m).padStart(2, "0")}分` : `${m}分${String(s).padStart(2, "0")}秒`;
       }
       function calculateDuration(startTime, endTime) {
         if (!startTime || !endTime) return "-";
-        return formatDuration(Math.floor((new Date(endTime) - new Date(startTime)) / 1000));
+        return formatDuration((new Date(endTime) - new Date(startTime)) / 1000);
       }
-      function formatDuration(seconds) {
-        const m = Math.floor(seconds / 60), s = seconds % 60;
-        return `${m}分${s.toString().padStart(2,"0")}秒`;
-      }
-      // 渲染配置摘要 HTML
       function renderConfigHtml(cfg) {
-        if (!cfg) return '';
+        if (!cfg) return "";
         const labels = {
-          sourceLang:'源语言', targetLang:'目标语言', outputTypes:'输出类型',
-          threadNum:'线程数', babeldoc:'BabelDoc', qps:'QPS',
-          dualMode:'双语模式', noWatermark:'去水印', ocr:'OCR', poolSize:'并发池',
-          skipLastPages:'跳过末页'
+          sourceLang:"源语言", targetLang:"目标语言", outputTypes:"输出类型", threadNum:"线程数", babeldoc:"BabelDoc",
+          qps:"QPS", dualMode:"双语模式", noWatermark:"去水印", ocr:"OCR", poolSize:"并发池", skipLastPages:"跳过末页", layoutNotes:"版面处理"
         };
-        return Object.entries(cfg).map(([k,v]) => {
-          const label = labels[k] || k;
+        return Object.entries(cfg).map(([k, v]) => {
           let val = v;
-          if (Array.isArray(v)) val = v.join(', ') || '-';
-          if (typeof v === 'boolean') val = v ? '是' : '否';
-          return `<div class="config-row"><span class="config-key">${escapeHtml(label)}</span><span class="config-val">${escapeHtml(val)}</span></div>`;
-        }).join('');
+          if (Array.isArray(v)) val = v.join(", ") || "-";
+          if (typeof v === "boolean") val = v ? "是" : "否";
+          if (val === null || val === undefined || val === "") val = "-";
+          return `<div class="config-row"><span class="config-key">${escapeHtml(labels[k] || k)}</span><span class="config-val">${escapeHtml(val)}</span></div>`;
+        }).join("");
+      }
+      function emptyState(iconName, title, hint) {
+        return `<div class="card empty-tasks"><div class="empty-art">${icon(iconName)}</div><div class="empty-title">${title}</div><div class="empty-hint">${hint}</div></div>`;
       }
 
       // ================= 任务计时器 =================
       // One shared ticker updates every running task's elapsed time in place.
-      // Per-task intervals used to bind to nodes that the next render replaced,
-      // so running tasks stayed on "计算中..." forever.
       let elapsedTicker = null;
       function tickElapsed() {
         const nodes = document.querySelectorAll("[data-elapsed-since]");
         nodes.forEach(el => {
           const start = Number(el.dataset.elapsedSince);
-          if (Number.isFinite(start)) el.textContent = formatDuration(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+          if (Number.isFinite(start)) el.textContent = formatDuration((Date.now() - start) / 1000);
         });
         if (!nodes.length) stopElapsedTicker();
       }
@@ -667,7 +730,7 @@
 
       // ================= PDF 预览 =================
       function openPdfPreview(url, filename) {
-        document.getElementById("pdfModalTitle").textContent = "预览: " + filename;
+        document.getElementById("pdfModalTitle").textContent = "预览：" + filename;
         document.getElementById("pdfFrame").src = url;
         document.getElementById("pdfModal").style.display = "flex";
       }
@@ -675,7 +738,7 @@
         document.getElementById("pdfModal").style.display = "none";
         document.getElementById("pdfFrame").src = "";
       }
-      document.getElementById("pdfModal").addEventListener("click", function(e) { if (e.target === this) closePdfPreview(); });
+      document.getElementById("pdfModal").addEventListener("click", function (e) { if (e.target === this) closePdfPreview(); });
       document.addEventListener("keydown", e => {
         if (e.key === "Escape" && document.getElementById("pdfModal").style.display === "flex") closePdfPreview();
       });
@@ -683,15 +746,19 @@
       // ================= 历史记录管理 =================
       const STORAGE_KEY = "pdf2zh_history_v2";
       const MAX_LOCAL_HISTORY = 300;
-      function getLocalHistory() { try { const h = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); return Array.isArray(h) ? h : []; } catch(e) { return []; } }
-      function saveLocalHistory(h) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h.slice(0, MAX_LOCAL_HISTORY))); } catch(e) {} }
-      function clearLocalHistory() { if (confirm("确定要清空所有本地历史记录吗？")) { localStorage.removeItem(STORAGE_KEY); displayHistory([]); } }
+      function getLocalHistory() { try { const h = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); return Array.isArray(h) ? h : []; } catch (e) { return []; } }
+      function saveLocalHistory(h) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h.slice(0, MAX_LOCAL_HISTORY))); } catch (e) {} }
+      function clearLocalHistory() {
+        if (!confirm("确定要清空本浏览器中的翻译历史吗？已翻译的文件不会被删除。")) return;
+        store(STORAGE_KEY, null);
+        displayHistory([]);
+        toast("历史记录已清空");
+      }
       function mergeHistory(serverHistory) {
-        let local = getLocalHistory();
         const map = new Map();
-        local.forEach(i => map.set(i.fileName + i.startTime, i));
+        getLocalHistory().forEach(i => map.set(i.fileName + i.startTime, i));
         serverHistory.forEach(i => map.set(i.fileName + i.startTime, i));
-        const merged = Array.from(map.values()).sort((a,b) => new Date(b.startTime) - new Date(a.startTime)).slice(0, MAX_LOCAL_HISTORY);
+        const merged = Array.from(map.values()).sort((a, b) => new Date(b.startTime) - new Date(a.startTime)).slice(0, MAX_LOCAL_HISTORY);
         saveLocalHistory(merged);
         return merged;
       }
@@ -701,238 +768,238 @@
       }
       function toggleTaskConfig(btn) {
         const detail = btn.nextElementSibling;
-        if (detail) {
-          detail.classList.toggle('show');
-          btn.textContent = detail.classList.contains('show') ? '收起配置 ▲' : '查看翻译配置 ▼';
-          btn.setAttribute('aria-expanded', String(detail.classList.contains('show')));
-          // 记录展开状态
-          const taskId = btn.closest('.task-card')?.dataset.taskId;
-          if (taskId) {
-            if (detail.classList.contains('show')) expandedConfigTasks.add(taskId);
-            else expandedConfigTasks.delete(taskId);
-          }
-        }
+        if (!detail) return;
+        const show = detail.classList.toggle("show");
+        btn.setAttribute("aria-expanded", String(show));
+        btn.querySelector(".label").textContent = show ? "收起翻译配置" : "查看翻译配置";
+        const taskId = btn.closest(".task-card")?.dataset.taskId;
+        if (taskId) { if (show) expandedConfigTasks.add(taskId); else expandedConfigTasks.delete(taskId); }
       }
 
-      // ================= 界面状态规范化 =================
+      // ================= 任务状态 =================
       function normalizeTaskState(task) {
-        const raw = (task.status || "").toString(), isActive = !!task.active;
-        if (isActive) return { state:"active", badgeText:"翻译中", badgeClass:"active" };
-        const low = raw.toLowerCase();
-        if (raw==="完成"||raw==="翻译成功"||low==="success") return { state:"success", badgeText:"成功", badgeClass:"completed" };
-        if (raw==="失败"||raw==="翻译失败"||raw==="报错"||low==="failed"||low==="error") return { state:"failed", badgeText:"失败", badgeClass:"failed" };
-        return { state:"idle", badgeText: raw||"等待中", badgeClass:"" };
+        const raw = (task.status || "").toString(), low = raw.toLowerCase();
+        if (task.active) return { state: "active", badgeText: "翻译中", badgeClass: "active" };
+        if (raw === "完成" || raw === "翻译成功" || low === "success") return { state: "success", badgeText: "已完成", badgeClass: "completed" };
+        if (raw === "失败" || raw === "翻译失败" || raw === "报错" || low === "failed" || low === "error") return { state: "failed", badgeText: "失败", badgeClass: "failed" };
+        return { state: "idle", badgeText: raw || "等待中", badgeClass: "" };
       }
       function sortTasks(tasks) {
-        return tasks.slice().sort((a,b) => {
-          const aa = a.active?0:1, bb = b.active?0:1;
+        return tasks.slice().sort((a, b) => {
+          const aa = a.active ? 0 : 1, bb = b.active ? 0 : 1;
           if (aa !== bb) return aa - bb;
-          return (b.startTime?new Date(b.startTime).getTime():0) - (a.startTime?new Date(a.startTime).getTime():0);
+          return (b.startTime ? new Date(b.startTime).getTime() : 0) - (a.startTime ? new Date(a.startTime).getTime() : 0);
         });
       }
       function filterTasks(tasks) {
-        if (currentTaskFilter==="all") return tasks;
-        if (currentTaskFilter==="active") return tasks.filter(t => !!t.active);
-        if (currentTaskFilter==="success") return tasks.filter(t => normalizeTaskState(t).state==="success");
-        if (currentTaskFilter==="failed") return tasks.filter(t => normalizeTaskState(t).state==="failed");
-        return tasks;
+        if (currentTaskFilter === "all") return tasks;
+        if (currentTaskFilter === "active") return tasks.filter(t => !!t.active);
+        return tasks.filter(t => normalizeTaskState(t).state === currentTaskFilter);
       }
 
-      // ================= 更新任务列表 =================
       function renderTaskCard(task) {
         const taskId = String(task.taskId || "unknown"), isActive = !!task.active;
         const n = normalizeTaskState(task);
-        let progress = Number.isFinite(task.progress) ? task.progress : parseInt(task.progress||"0",10);
+        let progress = Number.isFinite(task.progress) ? task.progress : parseInt(task.progress || "0", 10);
         if (!Number.isFinite(progress)) progress = 0;
-        progress = Math.max(0, Math.min(100, n.state==="success" ? 100 : progress));
-        let cardClass = "task-card", badgeClass = "task-badge";
-        if (n.state==="active") badgeClass+=" active";
-        else if (n.state==="success") { cardClass+=" completed"; badgeClass+=" completed"; }
-        else if (n.state==="failed") { cardClass+=" failed"; badgeClass+=" failed"; }
-        let elapsed = "-";
+        progress = Math.max(0, Math.min(100, n.state === "success" ? 100 : progress));
+        const cardState = n.state === "success" ? "completed" : n.state;
+        let elapsed = "<b>-</b>";
         if (task.startTime) {
           const start = new Date(task.startTime).getTime();
-          if (isActive) elapsed = `<span data-elapsed-since="${start}">${formatDuration(Math.max(0, Math.floor((Date.now() - start) / 1000)))}</span>`;
-          else elapsed = formatDuration(Math.max(0, Math.floor(((task.endTime?new Date(task.endTime).getTime():Date.now()) - start) / 1000)));
+          elapsed = isActive
+            ? `<b data-elapsed-since="${start}">${formatDuration((Date.now() - start) / 1000)}</b>`
+            : `<b>${formatDuration(((task.endTime ? new Date(task.endTime).getTime() : Date.now()) - start) / 1000)}</b>`;
         }
         let msgHtml = "";
-        if (task.message) { let mc = "task-message"; if(n.state==="failed") mc+=" error"; else if(n.state==="success") mc+=" success"; msgHtml = `<div class="${mc}" style="display:block">${escapeHtml(task.message)}</div>`; }
+        if (task.message) {
+          const mc = n.state === "failed" ? " error" : n.state === "success" ? " success" : "";
+          msgHtml = `<div class="task-message${mc}">${escapeHtml(task.message)}</div>`;
+        }
         let cfgHtml = "";
         if (task.config) {
-          const isExpanded = expandedConfigTasks.has(taskId);
-          cfgHtml = `<button type="button" class="task-config-toggle" aria-expanded="${isExpanded}" onclick="toggleTaskConfig(this)">${isExpanded ? "收起配置 ▲" : "查看翻译配置 ▼"}</button><div class="task-config-detail ${isExpanded?"show":""} config-display">${renderConfigHtml(task.config)}</div>`;
+          const open = expandedConfigTasks.has(taskId);
+          cfgHtml = `<button type="button" class="task-config-toggle" aria-expanded="${open}" onclick="toggleTaskConfig(this)"><span class="label">${open ? "收起翻译配置" : "查看翻译配置"}</span>${icon("chevron")}</button><div class="task-config-detail ${open ? "show" : ""}">${renderConfigHtml(task.config)}</div>`;
         }
-        return `<div class="${cardClass}" id="task-${escapeHtml(taskId)}" data-task-id="${escapeHtml(taskId)}">
-          <div class="task-header"><div class="task-filename">${escapeHtml(task.fileName||"未知文件")}</div><div class="${badgeClass}">${escapeHtml(n.badgeText)}</div></div>
-          <div class="task-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><div class="task-progress-fill" style="width:${progress}%"></div></div>
-          <div class="task-info">
-            <div class="task-info-item"><div class="task-info-label">进度</div><div class="task-info-value">${progress}%</div></div>
-            <div class="task-info-item"><div class="task-info-label">开始</div><div class="task-info-value">${formatTime(task.startTime)}</div></div>
-            <div class="task-info-item"><div class="task-info-label">引擎</div><div class="task-info-value">${escapeHtml(task.engine||"-")}</div></div>
-            <div class="task-info-item"><div class="task-info-label">服务</div><div class="task-info-value">${escapeHtml(task.service||"-")}</div></div>
-            <div class="task-info-item"><div class="task-info-label">模型</div><div class="task-info-value" title="${escapeHtml(task.modelName||"-")}">${escapeHtml(task.modelName||"默认模型")}</div></div>
-            <div class="task-info-item"><div class="task-info-label">耗时</div><div class="task-info-value">${elapsed}</div></div>
+        const fileIcon = n.state === "success" ? "check-circle" : n.state === "failed" ? "alert" : "file";
+        return `<article class="card task-card ${cardState}" data-task-id="${escapeHtml(taskId)}">
+          <div class="task-header">
+            <div class="file-icon">${icon(fileIcon)}</div>
+            <div class="task-title">
+              <div class="task-filename" title="${escapeHtml(task.fileName || "")}">${escapeHtml(task.fileName || "未知文件")}</div>
+              <div class="task-sub">开始于 ${formatTime(task.startTime)}</div>
+            </div>
+            <span class="badge ${n.badgeClass}">${escapeHtml(n.badgeText)}</span>
+          </div>
+          <div class="progress-row">
+            <div class="task-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><div class="task-progress-fill" style="width:${progress}%"></div></div>
+            <div class="progress-value">${progress}%</div>
+          </div>
+          <div class="chips">
+            <span class="chip">${icon("clock")}<span>耗时 ${elapsed}</span></span>
+            <span class="chip" title="翻译引擎">${icon("cpu")}<span>${escapeHtml(task.engine || "-")}</span></span>
+            <span class="chip" title="翻译服务">${icon("cloud")}<span>${escapeHtml(task.service || "-")}</span></span>
+            <span class="chip" title="模型：${escapeHtml(task.modelName || "默认模型")}">${icon("sparkle")}<span>${escapeHtml(task.modelName || "默认模型")}</span></span>
           </div>
           ${msgHtml}${cfgHtml}
-        </div>`;
+        </article>`;
       }
 
       function updateTasks(tasksList, force = false) {
         tasksList = Array.isArray(tasksList) ? tasksList : [];
-        // The server pushes a snapshot every second; skip identical snapshots so
-        // the list is not torn down (losing hover/selection) while nothing changed.
+        // Identical snapshots are skipped so hover state and selections survive.
         const signature = JSON.stringify(tasksList);
         if (!force && signature === lastTasksSignature) return;
         lastTasksSignature = signature;
         lastTasksList = tasksList;
-        const tasksContainer = document.getElementById("tasksContainer");
-        const taskCount = document.getElementById("taskCount");
-        const taskStats = document.getElementById("taskStats");
-        const badge = document.getElementById("tabTaskBadge");
 
         const states = tasksList.map(t => normalizeTaskState(t).state);
-        const activeCount = states.filter(st => st==="active").length;
-        const successCount = states.filter(st => st==="success").length;
-        const failedCount = states.filter(st => st==="failed").length;
-        taskCount.textContent = `${activeCount} 个活动任务`;
-        taskCount.className = `status-badge ${activeCount > 0 ? "active" : "idle"}`;
-        taskStats.textContent = `进行中 ${activeCount} \u00b7 成功 ${successCount} \u00b7 失败 ${failedCount}`;
-        if (activeCount > 0) { badge.textContent = activeCount; badge.style.display = "inline"; }
-        else { badge.style.display = "none"; }
+        const activeCount = states.filter(st => st === "active").length;
+        document.getElementById("statActive").textContent = activeCount;
+        document.getElementById("statSuccess").textContent = states.filter(st => st === "success").length;
+        document.getElementById("statFailed").textContent = states.filter(st => st === "failed").length;
+        const badge = document.getElementById("tabTaskBadge");
+        badge.textContent = activeCount;
+        badge.style.display = activeCount > 0 ? "inline-flex" : "none";
         document.title = activeCount > 0 ? `(${activeCount}) ${baseTitle}` : baseTitle;
 
         const shown = filterTasks(sortTasks(tasksList));
-        tasksContainer.innerHTML = shown.length
-          ? shown.map(renderTaskCard).join("")
-          : '<div class="empty-tasks"><p>暂无符合筛选条件的任务</p></div>';
+        const container = document.getElementById("tasksContainer");
+        if (shown.length) container.innerHTML = shown.map(renderTaskCard).join("");
+        else if (currentTaskFilter === "active") container.innerHTML = emptyState("inbox", "暂无进行中的翻译", "在 Zotero 中右键 PDF 选择翻译后，进度会实时显示在这里");
+        else container.innerHTML = emptyState("inbox", "没有符合筛选条件的任务", "完成的任务保留 30 秒，更早的记录请查看「翻译历史」");
         startElapsedTicker();
 
-        // 提示音 & 历史刷新. Tasks that had already finished before this page
-        // connected are recorded silently instead of all chiming at once.
+        // Tasks that had already finished before this page connected are
+        // recorded silently instead of all chiming at once.
         let finishedNow = false;
         tasksList.forEach((task, index) => {
           const st = states[index];
-          if (!task.active && (st==="success"||st==="failed") && !notifiedTaskIds.has(task.taskId)) {
+          if (!task.active && (st === "success" || st === "failed") && !notifiedTaskIds.has(task.taskId)) {
             notifiedTaskIds.add(task.taskId);
             if (!firstTasksMessage) finishedNow = true;
           }
         });
-        firstTasksMessage = false;
         if (finishedNow) { playDing(); setTimeout(syncHistory, 1500); }
         activeTasks = {};
         tasksList.forEach(task => { activeTasks[task.taskId] = task; });
       }
 
       // ================= SSE 连接 =================
+      function setConnection(state, text) {
+        const el = document.getElementById("connectionStatus");
+        el.className = "conn " + state;
+        el.querySelector(".label").textContent = text;
+        el.title = text;
+      }
       function connectSSE() {
         if (eventSource) eventSource.close();
         eventSource = new EventSource("/events");
         eventSource.onopen = function () {
-          document.getElementById("connectionStatus").className = "connection-status connected";
-          document.getElementById("connectionStatus").textContent = "\u25cf 已连接";
+          setConnection("connected", "服务已连接");
           // A restarted server may have finished tasks meanwhile; refresh history once.
           if (reconnectAttempts > 0) syncHistory();
           reconnectAttempts = 0;
         };
         eventSource.onmessage = function (event) {
-          try { const data = JSON.parse(event.data); if (data.type === "tasks") updateTasks(data.data); } catch(e) {}
+          try { const data = JSON.parse(event.data); if (data.type === "tasks") { updateTasks(data.data); firstTasksMessage = false; } } catch (e) {}
         };
         eventSource.onerror = function () {
-          document.getElementById("connectionStatus").className = "connection-status disconnected";
-          document.getElementById("connectionStatus").textContent = "\u25cf 未连接";
           eventSource.close();
           stopElapsedTicker();
-          // Keep retrying (the server may be restarted from Zotero) with a
-          // capped backoff instead of giving up after 15 seconds.
+          // Keep retrying (the server may be restarted from Zotero) with a capped backoff.
           reconnectAttempts++;
           const delay = Math.min(30000, 2000 * Math.pow(1.6, reconnectAttempts - 1));
-          document.getElementById("connectionStatus").textContent = `\u25cf 未连接，${Math.round(delay / 1000)} 秒后重试`;
+          setConnection("disconnected", `未连接 · ${Math.round(delay / 1000)} 秒后重试`);
           clearTimeout(reconnectTimer);
           reconnectTimer = setTimeout(connectSSE, delay);
         };
       }
 
       // ================= 历史记录渲染 =================
-      async function syncHistory() {
+      async function syncHistory(manual = false) {
         try {
           const resp = await fetch("/api/history"), result = await resp.json();
-          displayHistory(result.status==="success" ? mergeHistory(result.history) : getLocalHistory());
-        } catch(e) { displayHistory(getLocalHistory()); }
+          displayHistory(result.status === "success" ? mergeHistory(result.history) : getLocalHistory());
+          if (manual === true) toast("历史记录已刷新");
+        } catch (e) {
+          displayHistory(getLocalHistory());
+          if (manual === true) toast("服务未连接，显示本地记录");
+        }
       }
       function displayHistory(history) {
         const el = document.getElementById("historyList");
-        if (!history || history.length===0) {
-          el.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><p>暂无翻译记录</p></div>';
+        if (!history || history.length === 0) {
+          el.innerHTML = emptyState("history", "暂无翻译记录", "完成的翻译会出现在这里，可直接下载或预览译文");
           return;
         }
         el.innerHTML = history.map(item => {
-          const isSuccess = item.status==="success", sc = isSuccess?"success":"failed", st = isSuccess?"成功":"失败";
-          const duration = calculateDuration(item.startTime, item.endTime), timeStr = formatTime(item.startTime);
-          // 文件按钮
+          const isSuccess = item.status === "success", sc = isSuccess ? "success" : "failed";
+          const duration = calculateDuration(item.startTime, item.endTime);
           let filesHtml = "";
           if (isSuccess && item.fileList && item.fileList.length > 0) {
-            filesHtml = `<div class="history-files">${item.fileList.map(file => {
+            filesHtml = `<div class="detail-label">译文文件</div><div class="history-files">${item.fileList.map(file => {
               const url = `/translatedFile/${encodeURIComponent(file)}`, ft = getFileTypeLabel(String(file));
-              const tag = ft.code ? `<span class="file-type-tag"><span class="ft-code">${ft.code}</span><span class="ft-desc">${ft.desc}</span></span>` : `<span class="file-type-tag"><span class="ft-desc">${ft.desc}</span></span>`;
-              return `<div class="file-action-group">${tag}<a href="${escapeHtml(url)}" class="file-btn download" download title="下载 ${escapeHtml(ft.code||file)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>下载</a><button type="button" data-preview-url="${escapeHtml(url)}?preview=true" data-preview-name="${escapeHtml(file)}" class="file-btn preview" title="预览 ${escapeHtml(ft.code||file)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>预览</button></div>`;
+              const tag = `<span class="file-type-tag" title="${escapeHtml(file)}">${ft.code ? `<span class="ft-code">${escapeHtml(ft.code)}</span>` : ""}<span class="ft-desc">${escapeHtml(ft.desc)}</span></span>`;
+              return `<div class="file-action-group">${tag}<a href="${escapeHtml(url)}" class="file-btn" download title="下载 ${escapeHtml(file)}">${icon("download")}下载</a><button type="button" class="file-btn" data-preview-url="${escapeHtml(url)}?preview=true" data-preview-name="${escapeHtml(file)}" title="预览 ${escapeHtml(file)}">${icon("eye")}预览</button></div>`;
             }).join("")}</div>`;
           }
-          let errorHtml = !isSuccess && item.error ? `<div class="error-message"><strong>错误信息:</strong> ${escapeHtml(item.error)}</div>` : "";
-          // 配置摘要
-          let cfgSection = "";
-          if (item.config) {
-            cfgSection = `<div style="margin-top:10px"><strong style="font-size:13px;color:#333">翻译配置:</strong><div class="config-display" style="margin-top:6px">${renderConfigHtml(item.config)}</div></div>`;
-          }
-          return `<div class="history-item ${sc}">
-            <div class="history-summary" role="button" tabindex="0" aria-expanded="false"><div><div class="history-filename">${escapeHtml(item.fileName||"未知文件")}</div><div class="history-time">${timeStr}</div></div><div style="display:flex;align-items:center"><span class="status-dot ${sc}"></span><span class="status-text">${st}</span></div></div>
-            <div class="history-details">
-              <div class="meta-grid"><div><strong>引擎:</strong> ${escapeHtml(item.engine||"-")}</div><div><strong>服务:</strong> ${escapeHtml(item.service||"-")}</div><div><strong>模型:</strong> ${escapeHtml(item.modelName||"默认模型")}</div><div><strong>耗时:</strong> ${duration}</div><div><strong>结束:</strong> ${formatTime(item.endTime)}</div></div>
-              ${cfgSection}${filesHtml}${errorHtml}
+          const errorHtml = !isSuccess && item.error ? `<div class="error-message"><strong>错误信息：</strong>${escapeHtml(item.error)}</div>` : "";
+          const cfgSection = item.config ? `<div class="detail-label">翻译配置</div><div class="config-block">${renderConfigHtml(item.config)}</div>` : "";
+          const meta = [formatTime(item.startTime), duration !== "-" ? `耗时 ${duration}` : "", item.service || ""].filter(Boolean).map(escapeHtml).join(" · ");
+          return `<article class="card history-item ${sc}">
+            <div class="history-summary" role="button" tabindex="0" aria-expanded="false">
+              <div class="status-icon">${icon(isSuccess ? "check" : "x")}</div>
+              <div class="history-main">
+                <div class="history-filename" title="${escapeHtml(item.fileName || "")}">${escapeHtml(item.fileName || "未知文件")}</div>
+                <div class="history-meta">${meta}</div>
+              </div>
+              <span class="badge ${isSuccess ? "completed" : "failed"}">${isSuccess ? "成功" : "失败"}</span>
+              ${icon("chevron", "chevron")}
             </div>
-          </div>`;
+            <div class="history-details">
+              <div class="meta-grid"><div><strong>引擎</strong>${escapeHtml(item.engine || "-")}</div><div><strong>服务</strong>${escapeHtml(item.service || "-")}</div><div><strong>模型</strong>${escapeHtml(item.modelName || "默认模型")}</div><div><strong>耗时</strong>${duration}</div><div><strong>结束</strong>${formatTime(item.endTime)}</div></div>
+              ${filesHtml}${errorHtml}${cfgSection}
+            </div>
+          </article>`;
         }).join("");
       }
 
-      // ================= 加载服务器配置 =================
+      // ================= 服务器配置 =================
       async function loadServerConfig() {
         const el = document.getElementById("serverConfigDisplay");
         try {
           const resp = await fetch("/api/config"), result = await resp.json();
-          if (result.status === "success") {
-            const c = result.config;
-            const labels = { version:"服务器版本", port:"端口号", enable_venv:"虚拟环境", env_tool:"环境工具", enable_mirror:"镜像加速", mirror_source:"镜像源", skip_install:"跳过安装", enable_winexe:"Win EXE 模式" };
-            el.innerHTML = Object.entries(c).map(([k,v]) => `<div class="config-row"><span class="config-key">${escapeHtml(labels[k]||k)}</span><span class="config-val">${escapeHtml(v)}</span></div>`).join("");
-          } else { el.innerHTML = '<div style="color:#999;padding:10px 0">无法获取配置</div>'; }
-        } catch(e) { el.innerHTML = '<div style="color:#ddd;padding:10px 0">暂不可用</div>'; }
+          if (result.status !== "success") { el.innerHTML = '<div class="muted">无法获取配置</div>'; return; }
+          const c = result.config;
+          const labels = { version:"服务器版本", port:"端口号", enable_venv:"虚拟环境", env_tool:"环境工具", enable_mirror:"镜像加速", mirror_source:"镜像源", skip_install:"跳过安装", enable_winexe:"Win EXE 模式" };
+          el.innerHTML = Object.entries(c).map(([k, v]) => `<div class="config-row"><span class="config-key">${escapeHtml(labels[k] || k)}</span><span class="config-val">${escapeHtml(typeof v === "boolean" ? (v ? "是" : "否") : v)}</span></div>`).join("");
+          if (c.version) { const chip = document.getElementById("versionChip"); chip.textContent = "v" + c.version; chip.hidden = false; }
+        } catch (e) { el.innerHTML = '<div class="muted">服务暂不可用</div>'; }
       }
 
       // ================= 初始化 =================
       window.addEventListener("load", function () {
-        // 恢复上次标签页
-        const savedTab = localStorage.getItem('pdf2zh_current_tab');
-        if (savedTab) switchTab(savedTab);
-        // Tab 切换
+        applyTheme();
+        document.getElementById("themeBtn").addEventListener("click", cycleTheme);
+        switchTab(load("pdf2zh_current_tab") || "tasks");
         document.getElementById("tabNav").addEventListener("click", e => {
           const btn = e.target.closest(".tab-btn[data-tab]");
           if (btn) switchTab(btn.dataset.tab);
         });
-        // 任务筛选
         const filterEl = document.getElementById("taskFilter");
-        if (filterEl) {
-          filterEl.addEventListener("click", e => {
-            const btn = e.target.closest("button[data-filter]");
-            if (!btn) return;
-            currentTaskFilter = btn.dataset.filter;
-            Array.from(filterEl.querySelectorAll(".seg-btn")).forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            updateTasks(lastTasksList, true);
-          });
-        }
+        filterEl.addEventListener("click", e => {
+          const btn = e.target.closest("button[data-filter]");
+          if (!btn) return;
+          currentTaskFilter = btn.dataset.filter;
+          filterEl.querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("active", b === btn));
+          updateTasks(lastTasksList, true);
+        });
         const historyList = document.getElementById("historyList");
         historyList.addEventListener("click", e => {
           const preview = e.target.closest("[data-preview-url]");
           if (preview) { openPdfPreview(preview.dataset.previewUrl, preview.dataset.previewName); return; }
-          if (e.target.closest(".history-files, .history-details")) return;
+          if (e.target.closest(".history-details")) return;
           const item = e.target.closest(".history-item");
           if (item) toggleHistoryItem(item);
         });
@@ -942,6 +1009,8 @@
             toggleHistoryItem(e.target.closest(".history-item"));
           }
         });
+        updateTasks([], true);
+        lastTasksSignature = "";
         displayHistory(getLocalHistory());
         connectSSE();
         syncHistory();
