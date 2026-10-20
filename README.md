@@ -17,7 +17,15 @@
 
 完整版本、插件 ID、来源和 SHA-256 见 [manifest.json](manifest.json)。原发布中的插件字节保持不变；解包源码在 [src/plugins](src/plugins)。本地 Python 修复在 [tools](tools) 和 [pdf2zh/server](pdf2zh/server)。
 
-**尚未实现：扫描 PDF 一键添加文字层。** 现有 AI 文档解析与 PDF 翻译中的 OCR 选项，不等于已经具备扫描教材文字层功能。不会把规划中的功能描述为已安装。
+**扫描 PDF 文字层：OCR 内核（M1）已可用，Zotero 内一键操作尚未实现。** [ocr/](ocr) 提供离线命令行工具：RapidOCR CPU 识别，只追加不可见文字，页面外观逐像素不变；支持页范围、Ctrl+C 取消后续跑、失败页单独重试，验证通过才发布结果。Zotero 菜单、后台任务服务与 AI 侧栏选段衔接（M2–M4）仍在规划中。
+
+```powershell
+uv venv ocruntime --python 3.11
+uv pip install --python ocruntime\Scripts\python.exe -r ocrequirements.lock
+ocruntime\Scripts\python.exe ocr	ext_layer.py 教材.pdf --pages 16-20   # 输出 教材.ocr.pdf 与 .report.json
+```
+
+不加 `--pages` 处理全书；已有文字层、已有隐藏 OCR 层和空白页自动跳过。结果另存为副本，原 PDF 不修改。
 
 ## 使用完整 Release 整合包
 

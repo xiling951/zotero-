@@ -37,7 +37,7 @@
     }
   ],
   "pdf2zh_layout_safety": "bitmap-formula-protection-v1",
-  "ocr_status": "planned_not_implemented",
+  "ocr_status": "core_cli_implemented_zotero_integration_planned",
   "upstream_sources": [
     {
       "component": "ai-sidebar",

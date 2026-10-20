@@ -45,6 +45,13 @@ jobs:
           python -m pip install --disable-pip-version-check flask toml pypdf pymupdf==1.26.7 packaging pydantic pytest
           python -m pytest tests -q
 
+      - name: OCR text layer tests (synthetic scans, real RapidOCR)
+        working-directory: ocr
+        run: |
+          python -m venv "$env:RUNNER_TEMP\ocr"
+          & "$env:RUNNER_TEMP\ocr\Scripts\python.exe" -m pip install --disable-pip-version-check -r requirements.lock pytest
+          & "$env:RUNNER_TEMP\ocr\Scripts\python.exe" -m pytest tests -q
+
       - name: Plugin tests (jsdom)
         working-directory: tests/js
         run: |
