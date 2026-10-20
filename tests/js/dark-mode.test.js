@@ -48,8 +48,16 @@ vm.runInContext(fs.readFileSync(path.join(pluginDir, 'bootstrap.js'), 'utf8'), s
 
 const frame = () => new Promise(resolve => win.requestAnimationFrame(() => setTimeout(resolve, 5)));
 
+// The plugin also schedules fallback refreshes (0.5s-10s after attaching).
+// Capture them so a slow machine cannot count them as mutation-triggered
+// refreshes; they are run explicitly at the end instead.
+const fallbackTimers = [];
+win.setTimeout = (callback, delay) => fallbackTimers.push({ callback, delay });
+win.clearTimeout = () => {};
+
 (async () => {
   await vm.runInContext('startup({rootURI: ""})', sandbox);
+  assert.deepEqual(fallbackTimers.map(timer => timer.delay), [500, 1500, 4000, 10000]);
   assert.equal(doc.documentElement.getAttribute('data-zai-sidebar-theme'), 'dark');
   const generated = doc.getElementById('zai-sidebar-dark-mode-style').textContent;
   assert.match(generated, /\.zai-app \.bubble.*background(?:-color)?:rgb\(35, 41, 52\) !important/s, 'light sidebar background remapped');
@@ -78,6 +86,10 @@ const frame = () => new Promise(resolve => win.requestAnimationFrame(() => setTi
   select.value = 'light'; select.dispatchEvent(new win.Event('change'));
   assert.equal(doc.documentElement.getAttribute('data-zai-sidebar-theme'), 'light');
   assert.equal(prefs.get('extensions.zotero-ai-sidebar-dark-mode.theme'), 'light');
+
+  // Fallback refreshes still work and keep the injected control unique.
+  for (const timer of fallbackTimers) timer.callback();
+  assert.equal(doc.querySelectorAll('.zai-sidebar-theme-select').length, 1);
 
   vm.runInContext('shutdown()', sandbox);
   assert.equal(doc.getElementById('zai-sidebar-dark-mode-style'), null);
